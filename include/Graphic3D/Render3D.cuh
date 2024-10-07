@@ -13,6 +13,7 @@ struct Pixel3D {
 // BETA!!!
 struct LightSrc3D {
     Vec3D pos;
+    Vec3D normal = Vec3D(0, -1, 0);
 
     // Keep in mind these values are usually not for the light source
     // but for the surface of the object (in this case, the triangles)
@@ -26,7 +27,7 @@ struct LightSrc3D {
     to reduce green and blue light
     while increasing red light
     */
-    Vec3D rgbRatio = Vec3D(1, 1, 1);
+    Vec3D rgbRatio = Vec3D(1.4, 0.7, 0.7);
 };
 
 class Render3D {

@@ -38,9 +38,7 @@ int main() {
             double cx = 50 + 150 * double(x) / points.size();
             double cz = 50 + 150 * double(z) / points[x].size();
             double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
-            Color3D color = Color3D(
-                cx, cz, csqrt
-            );
+            Color3D color = Color3D(cx, cz, csqrt);
 
             Tri3D tri1 = Tri3D(
                 points[x][z], points[x + 1][z], points[x][z + 1],

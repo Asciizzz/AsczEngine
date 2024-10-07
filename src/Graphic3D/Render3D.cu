@@ -229,11 +229,11 @@ __global__ void rasterizeKernel(
             Color3D color = tri3Ds[i].color;
 
             Vec3D lightDir = Vec3D::sub(light.pos, worldPos);
-
             double cosA = Vec3D::dot(tri3Ds[i].normal, lightDir) /
                 (Vec3D::mag(tri3Ds[i].normal) * Vec3D::mag(lightDir));
             // Note: we cannot use std::max and std::min in device code
-            if (cosA < 0) cosA = 0;
+            // if (cosA < 0) cosA = 0;
+            if (cosA < 0) cosA = -cosA;
 
             double ratio = light.ambient + cosA * (light.specular - light.ambient);
             color.runtimeRGB = Color3D::x255(color.rawRGB);

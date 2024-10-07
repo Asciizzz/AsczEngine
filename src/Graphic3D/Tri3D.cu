@@ -60,6 +60,12 @@ std::vector<Tri3D> Tri3D::readObj(std::string filename) {
     std::vector<Vec3D> verts;
     std::vector<Vec3D> normals;
 
+    // Find the max and min x and y values
+    double maxX = -INFINITY;
+    double maxY = -INFINITY;
+    double minX = INFINITY;
+    double minY = INFINITY;
+
     std::string line;
     while (std::getline(file, line)) {
         std::stringstream ss(line);
@@ -104,8 +110,34 @@ std::vector<Tri3D> Tri3D::readObj(std::string filename) {
                 verts[v1], verts[v2], verts[v3], normal, Color3D(255, 255, 255)
             );
 
+            if (tri.v1.x > maxX) maxX = tri.v1.x;
+            if (tri.v2.x > maxX) maxX = tri.v2.x;
+            if (tri.v3.x > maxX) maxX = tri.v3.x;
+
+            if (tri.v1.y > maxY) maxY = tri.v1.y;
+            if (tri.v2.y > maxY) maxY = tri.v2.y;
+            if (tri.v3.y > maxY) maxY = tri.v3.y;
+
+            if (tri.v1.x < minX) minX = tri.v1.x;
+            if (tri.v2.x < minX) minX = tri.v2.x;
+            if (tri.v3.x < minX) minX = tri.v3.x;
+
+            if (tri.v1.y < minY) minY = tri.v1.y;
+            if (tri.v2.y < minY) minY = tri.v2.y;
+            if (tri.v3.y < minY) minY = tri.v3.y;
+
             tris.push_back(tri);
         }
+    }
+
+    for (Tri3D &tri : tris) {
+        tri.v1.x -= (maxX + minX) / 2;
+        tri.v2.x -= (maxX + minX) / 2;
+        tri.v3.x -= (maxX + minX) / 2;
+
+        tri.v1.y -= (maxY + minY) / 2;
+        tri.v2.y -= (maxY + minY) / 2;
+        tri.v3.y -= (maxY + minY) / 2;
     }
 
     return tris;
