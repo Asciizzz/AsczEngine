@@ -19,17 +19,18 @@ public:
     double vel = 0;
     void updatePosition();
 
-    // Plane
-    Plane3D plane = Plane3D();
-    void updatePlane();
-
-    // FoV
+        // FoV
     double fov = 120;
     double screendist;
     void dynamicFov();
-
     // Fps camera movement
     double m_sens = 0.1;
+
+    // Points and plane
+    Plane3D plane = Plane3D();
+    void updatePlane();
+    void angleRestrict();
+    void facePoint(Vec3D target);
 
     // Console log
     std::string log;

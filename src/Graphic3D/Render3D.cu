@@ -120,8 +120,8 @@ void Render3D::renderCPU(std::vector<Tri3D> tri3Ds) {
 
 Parallelize rasterization on a singular buffer can 
 */
-__device__ inline bool atomicMinDouble(double* address, double val) {
-    unsigned long long int* address_as_ull = (unsigned long long int*) address;
+__device__ inline bool atomicMinDouble(double *address, double val) {
+    unsigned long long int *address_as_ull = (unsigned long long int *) address;
     unsigned long long int old = *address_as_ull, assumed;
 
     do {
