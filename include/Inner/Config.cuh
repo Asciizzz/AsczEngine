@@ -16,6 +16,7 @@
 
 #include <stack>
 #include <queue>
+#include <vector>
 
 #include <cuda_runtime.h>
 #include <FpsHandle.cuh>

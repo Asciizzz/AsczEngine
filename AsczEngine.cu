@@ -24,24 +24,8 @@ int main() {
 
     // =================== EXPERIMENTATION =======================
 
-    std::vector<Tri3D> tris;
-
-    for (size_t i = 0; i < 64; i++) {
-        Wall wall1 = Wall(0, i, 200, 3);
-        Wall wall2 = Wall(0, i, 200, 1);
-
-        tris.push_back(wall1.tri1);
-        tris.push_back(wall1.tri2);
-        tris.push_back(wall2.tri1);
-        tris.push_back(wall2.tri2);
-    }
-
-    size_t tri_count = tris.size();
+    size_t tri_count = 1 << 10;
     Tri3D *tri_test = new Tri3D[tri_count];
-
-    for (size_t i = 0; i < tri_count; i++) {
-        tri_test[i] = tris[i];
-    }
 
     // Unrelated stuff
     double rainbowR = 255;

@@ -21,7 +21,6 @@ whether the triang is a flat or an object
 */
 
 #include <Plane3D.cuh>
-#include <vector>
 
 struct Tri2D {
     Vec2D v1, v2, v3;
