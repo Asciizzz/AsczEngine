@@ -48,7 +48,7 @@ public:
     int BUFFER_HEIGHT;
     Pixel3D *BUFFER;
 
-    // Device pointer
+    // CUDA Properties
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
     Pixel3D *D_BUFFER; 
@@ -71,14 +71,16 @@ public:
 
 // Kernel for converting 3D triangles to 2D triangles
 __global__ void tri3DsTo2DsKernel(
-    Tri2D *tri2Ds, const Tri3D *tri3Ds, Camera3D cam, int p_s, size_t size
+    Tri2D *tri2Ds, const Tri3D *tri3Ds, Camera3D cam,
+    // Other params if needed
+    
+    int p_s, size_t size
 );
 
 // Kernel for rasterizing 2D triangles
 __global__ void rasterizeKernel(
     // Buffer and triangles
     Pixel3D *pixels, const Tri2D *tri2Ds, const Tri3D *tri3Ds,
-    
     // Add other parameters here for future use
     /* Idea:
     - Light source

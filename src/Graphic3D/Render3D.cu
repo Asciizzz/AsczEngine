@@ -35,29 +35,30 @@ void Render3D::reset() {
 __host__ __device__ Vec2D Render3D::toVec2D(const Camera3D &cam, Vec3D v) {
     Vec3D diff = Vec3D::sub(v, cam.pos);
 
-    // Rotation around Y-axis
-    double transX = diff.x * cos(-cam.ang.y) + diff.z * sin(-cam.ang.y);
-    double transZY = diff.z * cos(-cam.ang.y) - diff.x * sin(-cam.ang.y);
+    // Apply Yaw (rotation around Y axis)
+    float cosYaw = cos(-cam.ang.y);
+    float sinYaw = sin(-cam.ang.y);
+    float tempX = diff.x * cosYaw + diff.z * sinYaw;
+    float tempZ = -diff.x * sinYaw + diff.z * cosYaw;
 
-    // Rotation around X-axis
-    double transY = diff.y * cos(-cam.ang.x) + transZY * sin(-cam.ang.x);
-    double transZ = transZY * cos(-cam.ang.x) - diff.y * sin(-cam.ang.x);
+    // Apply Pitch (rotation around X axis)
+    float cosPitch = cos(-cam.ang.x);
+    float sinPitch = sin(-cam.ang.x);
+    float finalY = tempZ * sinPitch + diff.y * cosPitch;
+    float finalZ = tempZ * cosPitch - diff.y * sinPitch;
 
-    Vec2D vertex2D = {
-        transX * cam.screendist / transZ,
-        -transY * cam.screendist / transZ, // minus to flip
-        transZ
-    };
+    float projX = (tempX * cam.screendist) / finalZ;
+    float projY = -(finalY * cam.screendist) / finalZ;
 
-    if (vertex2D.zDepth <= 0) {
-        vertex2D.x *= -10;
-        vertex2D.y *= -10;
+    if (finalZ < 0) {
+        projX *= -10;
+        projY *= -10;
     }
 
-    vertex2D.x += cam.w_center_x;
-    vertex2D.y += cam.w_center_y;
+    projX += cam.w_center_x;
+    projY += cam.w_center_y;
 
-    return vertex2D;
+    return Vec2D(projX, projY, finalZ);
 }
 
 // The main render function
@@ -111,13 +112,23 @@ void Render3D::renderCPU(std::vector<Tri3D> tri3Ds) {
     // Decrapitated
 }
 
-// KERNER FOR TRIANGLE RENDERING
+// HOLY SHIT THIS REDUCES THE RACE CONDITION BY ALOT
+/* Explaination:
 
-/* Idea:
-
-n 3D TRIs --/Parallel/--> n 2D TRIs + 1 buffer<> --/Parallel/--> 1 buffer<Pixels>
-
+Parallelize rasterization on a singular buffer can 
 */
+__device__ inline bool atomicMinDouble(double* address, double val) {
+    unsigned long long int* address_as_ull = (unsigned long long int*) address;
+    unsigned long long int old = *address_as_ull, assumed;
+
+    do {
+        assumed = old;
+        if (__longlong_as_double(assumed) <= val) break;
+        old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val));
+    } while (assumed != old);
+
+    return __longlong_as_double(old) > val;
+}
 
 __global__ void tri3DsTo2DsKernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds, Camera3D cam, int p_s, size_t size
@@ -155,6 +166,12 @@ __global__ void rasterizeKernel(
             tri2Ds[i].v2.zDepth <= 0 &&
             tri2Ds[i].v3.zDepth <= 0) return;
 
+        // If all 3 x or y are out of bounds, then do nothing
+        if (tri2Ds[i].v1.x < 0 && tri2Ds[i].v2.x < 0 && tri2Ds[i].v3.x < 0) return;
+        if (tri2Ds[i].v1.y < 0 && tri2Ds[i].v2.y < 0 && tri2Ds[i].v3.y < 0) return;
+        if (tri2Ds[i].v1.x >= b_w && tri2Ds[i].v2.x >= b_w && tri2Ds[i].v3.x >= b_w) return;
+        if (tri2Ds[i].v1.y >= b_h && tri2Ds[i].v2.y >= b_h && tri2Ds[i].v3.y >= b_h) return;
+
         // Find the bounding box of the 2D polygon
         int minX = min(tri2Ds[i].v1.x, min(tri2Ds[i].v2.x, tri2Ds[i].v3.x));
         int maxX = max(tri2Ds[i].v1.x, max(tri2Ds[i].v2.x, tri2Ds[i].v3.x));
@@ -180,16 +197,16 @@ __global__ void rasterizeKernel(
 
             // Check if the pixel is inside the triangle
             // (allow small margin of error)
-            if (barycentric.x < -0.01 ||
-                barycentric.y < -0.01 ||
-                barycentric.z < -0.01) continue;
+            if (barycentric.x < -0.0 ||
+                barycentric.y < -0.0 ||
+                barycentric.z < -0.0) continue;
 
             p.zDepth = Vec2D::barycentricCalc(
                 barycentric, tri2Ds[i].v1.zDepth, tri2Ds[i].v2.zDepth, tri2Ds[i].v3.zDepth
             );
 
             // Check if the pixel is closer than the current pixel
-            if (pixels[index].screen.zDepth < p.zDepth) continue;
+            if (!atomicMinDouble(&pixels[index].screen.zDepth, p.zDepth)) continue;
 
             // Get world position
             double px = Vec2D::barycentricCalc(
@@ -216,9 +233,7 @@ __global__ void rasterizeKernel(
             double ratio = light.ambient + cosA * (light.specular - light.ambient);
             color.runtimeRGB = Color3D::x255(color.rawRGB);
 
-            color.runtimeRGB.v1 = color.runtimeRGB.v1 * ratio;
-            color.runtimeRGB.v2 = color.runtimeRGB.v2 * ratio;
-            color.runtimeRGB.v3 = color.runtimeRGB.v3 * ratio;
+            color.runtimeRGB.mult(ratio);
 
             // Apply colored light
             color.runtimeRGB.v1 = color.runtimeRGB.v1 * light.rgbRatio.x;
@@ -226,13 +241,7 @@ __global__ void rasterizeKernel(
             color.runtimeRGB.v3 = color.runtimeRGB.v3 * light.rgbRatio.z;
 
             // Restrict color values
-            if (color.runtimeRGB.v1 > 255) color.runtimeRGB.v1 = 255;
-            if (color.runtimeRGB.v2 > 255) color.runtimeRGB.v2 = 255;
-            if (color.runtimeRGB.v3 > 255) color.runtimeRGB.v3 = 255;
-
-            if (color.runtimeRGB.v1 < 0) color.runtimeRGB.v1 = 0;
-            if (color.runtimeRGB.v2 < 0) color.runtimeRGB.v2 = 0;
-            if (color.runtimeRGB.v3 < 0) color.runtimeRGB.v3 = 0;
+            color.runtimeRGB.restrict(true);
 
             // Set buffer values
             pixels[index] = {

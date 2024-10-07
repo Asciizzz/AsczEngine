@@ -1,5 +1,22 @@
 #include <Color3D.cuh>
 
+__host__ __device__ void ColorVec::mult(double scalar) {
+    v1 *= scalar;
+    v2 *= scalar;
+    v3 *= scalar;
+}
+__host__ __device__ void ColorVec::restrict(bool x255) {
+    if (x255) {
+        v1 = std::min(255.0, std::max(0.0, v1));
+        v2 = std::min(255.0, std::max(0.0, v2));
+        v3 = std::min(255.0, std::max(0.0, v3));
+    } else {
+        v1 = std::min(1.0, std::max(0.0, v1));
+        v2 = std::min(1.0, std::max(0.0, v2));
+        v3 = std::min(1.0, std::max(0.0, v3));
+    }
+}
+
 __host__ __device__ Color3D::Color3D(double r, double g, double b, double a, bool isDouble) {
     // RGB
     if (isDouble) rawRGB = {r, g, b};

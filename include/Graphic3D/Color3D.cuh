@@ -9,6 +9,8 @@
 struct ColorVec {
     // In range 0-1
     double v1, v2, v3;
+    __host__ __device__ void mult(double scalar);
+    __host__ __device__ void restrict(bool x255=false);
 };
 
 class Color3D {
