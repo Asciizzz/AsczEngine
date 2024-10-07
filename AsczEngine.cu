@@ -25,10 +25,10 @@ int main() {
     CAM->pos = Vec3D(0, 20, -100);
 
     std::vector<Tri3D> MODEL_OBJ = Tri3D::readObj(
-        "assets/Models/malevolent_shrine.obj"
+        "assets/Models/City/Residential Buildings 001.obj"
     );
 
-    size_t tri_count = MODEL_OBJ.size() + 8;
+    size_t tri_count = MODEL_OBJ.size();
     Tri3D *tri_test = new Tri3D[tri_count];
 
     for (int i = 0; i < tri_count; i++) {
