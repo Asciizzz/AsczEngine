@@ -27,8 +27,7 @@ int main() {
     for (double x = -10; x < 10; x += 0.1) {
         points.push_back(std::vector<Vec3D>());
         for (double z = -10; z < 10; z += 0.1) {
-            // double y = sin(x) * cos(z);
-            double y = 0;
+            double y = sin(x) * cos(z);
 
             points.back().push_back(Vec3D(x, y, z));
         }
@@ -36,11 +35,11 @@ int main() {
 
     for (size_t x = 0; x < points.size() - 1; x++) {
         for (size_t z = 0; z < points[x].size() - 1; z++) {
-            double c1 = 50 + 150 * double(x) / points.size();
-            double c2 = 50 + 150 * double(z) / points[x].size();
-
+            double cx = 50 + 150 * double(x) / points.size();
+            double cz = 50 + 150 * double(z) / points[x].size();
+            double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
             Color3D color = Color3D(
-                c1, 180, c2
+                cx, cz, csqrt
             );
 
             Tri3D tri1 = Tri3D(

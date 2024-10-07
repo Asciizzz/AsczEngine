@@ -1,5 +1,32 @@
 #include <Color3D.cuh>
 
+// Custom functions that replace some library functions
+#include <iostream>
+
+// Custom implementation of fmod
+__host__ __device__ double custom_fmod(double x, double y) {
+    // Handle case where y is 0 to avoid division by zero
+    if (y == 0.0) {
+        return x;  // or some other appropriate value/behavior
+    }
+
+    double quotient = x / y;
+    // Use truncation to get the integer part
+    double integer_part;
+    
+    // Getting the integer part by truncating the quotient
+    if (quotient >= 0) {
+        integer_part = static_cast<double>(static_cast<int>(quotient));
+    } else {
+        integer_part = static_cast<double>(static_cast<int>(quotient) - 1);
+    }
+    
+    // Return the remainder
+    return x - (integer_part * y);
+}
+
+// ColorVec
+
 __host__ __device__ void ColorVec::mult(double scalar) {
     v1 *= scalar;
     v2 *= scalar;
@@ -64,7 +91,7 @@ __host__ __device__ ColorVec Color3D::toRGB(ColorVec hsl) {
     double r, g, b;
 
     double c = (1 - std::abs(2 * l - 1)) * s;
-    double x = c * (1 - std::abs(fmod(h * 6, 2) - 1));
+    double x = c * (1 - std::abs(custom_fmod(h * 6, 2) - 1));
     double m = l - c / 2;
 
     if (h < 1.0 / 6) { r = c; g = x; b = 0; }

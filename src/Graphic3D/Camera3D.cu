@@ -46,7 +46,7 @@ void Camera3D::facePoint(Vec3D target) {
 }
 
 void Camera3D::updateLog() {
-    log = "Camera3D\n";
+    log = "Camera3D - Powered by Ascz Corporation\n";
     log += "| Pos: " + std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z) + "\n";
     log += "| Ang: " + std::to_string(ang.x) + ", " + std::to_string(ang.y) + ", " + std::to_string(ang.z) + "\n";
     log += "| Fov: " + std::to_string(fov) + "\n";

@@ -5,7 +5,7 @@ ClearScreen:
 	clear
 
 AsczEngine:
-	nvcc -O2 -Xcompiler -w \
+	nvcc \
 		-I include/Inner \
 		-I include/Graphic3D \
 		-I include/Playground \
@@ -33,9 +33,10 @@ AsczEngine:
 		-lsfml-graphics \
 		-lsfml-audio \
 		-lopenal32 \
+		\
 		-rdc=true \
 		--expt-relaxed-constexpr \
-		--extended-lambda
+		--extended-lambda \
 
 Run:
 	./AsczEngine
