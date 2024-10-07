@@ -8,6 +8,7 @@ AsczEngine:
 	nvcc -O2 -Xcompiler -w \
 		-I include/Inner \
 		-I include/Graphic3D \
+		-I include/Playground \
 		\
 		-I libraries/SFML/include \
 		-L libraries/SFML/lib \

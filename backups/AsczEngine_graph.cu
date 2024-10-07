@@ -1,9 +1,6 @@
 #include <SFMLTexture.cuh>
 #include <CsLogHandle.h>
 
-// Playground
-#include <Wall.cuh>
-
 int main() {
     FpsHandle *FPS = new FpsHandle();
     Camera3D *CAM = new Camera3D();
@@ -24,22 +21,53 @@ int main() {
 
     // =================== EXPERIMENTATION =======================
 
+    // Function y = f(x, z) to create a 3D graph
+    std::vector<std::vector<Vec3D>> points;
     std::vector<Tri3D> tris;
+    for (double x = -10; x < 10; x += 0.1) {
+        points.push_back(std::vector<Vec3D>());
+        for (double z = -10; z < 10; z += 0.1) {
+            // double y = sin(x) * cos(z);
+            double y = 0;
 
-    for (size_t i = 0; i < 64; i++) {
-        Wall wall1 = Wall(0, i, 200, 3);
-        Wall wall2 = Wall(0, i, 200, 1);
+            points.back().push_back(Vec3D(x, y, z));
+        }
+    }
 
-        tris.push_back(wall1.tri1);
-        tris.push_back(wall1.tri2);
-        tris.push_back(wall2.tri1);
-        tris.push_back(wall2.tri2);
+    for (size_t x = 0; x < points.size() - 1; x++) {
+        for (size_t z = 0; z < points[x].size() - 1; z++) {
+            double c1 = 50 + 150 * double(x) / points.size();
+            double c2 = 50 + 150 * double(z) / points[x].size();
+
+            Color3D color = Color3D(
+                c1, 180, c2
+            );
+
+            Tri3D tri1 = Tri3D(
+                points[x][z], points[x + 1][z], points[x][z + 1],
+                color
+            );
+            Tri3D tri2 = Tri3D(
+                points[x][z + 1], points[x + 1][z], points[x + 1][z + 1],
+                color
+            );
+
+            if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
+            if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
+
+            tris.push_back(tri1);
+            tris.push_back(tri2);
+        }
     }
 
     size_t tri_count = tris.size();
     Tri3D *tri_test = new Tri3D[tri_count];
 
     for (size_t i = 0; i < tri_count; i++) {
+        tris[i].v1 = Vec3D::scale(tris[i].v1, Vec3D(), 20);
+        tris[i].v2 = Vec3D::scale(tris[i].v2, Vec3D(), 20);
+        tris[i].v3 = Vec3D::scale(tris[i].v3, Vec3D(), 20);
+
         tri_test[i] = tris[i];
     }
 

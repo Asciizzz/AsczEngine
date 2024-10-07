@@ -22,6 +22,28 @@ Tri3D::Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Vec3D normal, Color3D color) {
     this->isTwoSided = false;
 }
 
+// Transformations
+void Tri3D::rotate(Vec3D center, Vec3D w) {
+    v1 = Vec3D::rotate(v1, center, w);
+    v2 = Vec3D::rotate(v2, center, w);
+    v3 = Vec3D::rotate(v3, center, w);
+
+    normal = Vec3D::rotate(normal, Vec3D(), w);
+}
+
+void Tri3D::translate(Vec3D t) {
+    v1 = Vec3D::add(v1, t);
+    v2 = Vec3D::add(v2, t);
+    v3 = Vec3D::add(v3, t);
+}
+
+void Tri3D::scale(Vec3D center, Vec3D s) {
+    v1 = Vec3D::scale(v1, center, s);
+    v2 = Vec3D::scale(v2, center, s);
+    v3 = Vec3D::scale(v3, center, s);
+
+    normal = Vec3D::scale(normal, Vec3D(), s);
+}
 
 // BETA! read from an obj file and return a list of Tri3D
 std::vector<Tri3D> Tri3D::readObj(std::string filename) {

@@ -43,6 +43,11 @@ public:
     // A one-sided triangle (belonging to an object)
     Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Vec3D normal=Vec3D(), Color3D color=Color3D());
 
+    // Transformations
+    void rotate(Vec3D center, Vec3D w);
+    void translate(Vec3D t);
+    void scale(Vec3D center, Vec3D s);
+
     // BETA!
     static std::vector<Tri3D> readObj(std::string filename);
 };
