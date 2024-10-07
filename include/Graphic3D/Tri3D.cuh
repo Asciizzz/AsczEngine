@@ -23,9 +23,9 @@ whether the triang is a flat or an object
 #include <Plane3D.cuh>
 
 struct Tri2D {
-    Vec2D v1, v2, v3;
 
-    Tri2D() {};
+    Vec2D v1, v2, v3;
+    __host__ __device__ Tri2D() {};
 };
 
 class Tri3D {
@@ -36,11 +36,11 @@ public:
     bool isTwoSided;
 
     // Default constructor
-    Tri3D() {};
+    __host__ __device__ Tri3D() {};
     // A flat triangle (free-floating)
-    Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Color3D color=Color3D(), bool isTwoSided=true);
+    __host__ __device__ Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Color3D color=Color3D(), bool isTwoSided=false);
     // A one-sided triangle (belonging to an object)
-    Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Vec3D normal=Vec3D(), Color3D color=Color3D());
+    __host__ __device__ Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Vec3D normal=Vec3D(), Color3D color=Color3D());
 
     // Transformations
     void rotate(Vec3D center, Vec3D w);

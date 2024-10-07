@@ -1,5 +1,6 @@
 #include <Tri3D.cuh>
 
+__host__ __device__
 Tri3D::Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Color3D color, bool is2sided) {
     this->v1 = v1;
     this->v2 = v2;
@@ -13,6 +14,7 @@ Tri3D::Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Color3D color, bool is2sided) {
     );
 }
 
+__host__ __device__
 Tri3D::Tri3D(Vec3D v1, Vec3D v2, Vec3D v3, Vec3D normal, Color3D color) {
     this->v1 = v1;
     this->v2 = v2;

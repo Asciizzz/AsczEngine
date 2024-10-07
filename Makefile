@@ -20,7 +20,6 @@ AsczEngine:
 		src/Inner/CsLogHandle.cpp \
 		src/Graphic3D/Camera3D.cu \
 		src/Graphic3D/Vec3D.cu \
-		src/Graphic3D/Edge3D.cu \
 		src/Graphic3D/Tri3D.cu \
 		src/Graphic3D/Plane3D.cu \
 		src/Graphic3D/Color3D.cu \
@@ -35,7 +34,8 @@ AsczEngine:
 		-lsfml-audio \
 		-lopenal32 \
 		-rdc=true \
-		--expt-relaxed-constexpr
+		--expt-relaxed-constexpr \
+		--extended-lambda
 
 Run:
 	./AsczEngine

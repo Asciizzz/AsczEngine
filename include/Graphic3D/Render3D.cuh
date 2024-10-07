@@ -13,6 +13,9 @@ struct Pixel3D {
 // BETA!!!
 struct LightSrc3D {
     Vec3D pos;
+
+    // Keep in mind these values are usually not for the light source
+    // but for the surface of the object (in this case, the triangles)
     double ambient = 0.05;
     double specular = 1.1;
 
@@ -48,10 +51,10 @@ public:
     int BUFFER_HEIGHT;
     Pixel3D *BUFFER;
 
-    // CUDA Properties
+    // CUDA stuffs
+    Pixel3D *D_BUFFER; 
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
-    Pixel3D *D_BUFFER; 
 
     // BETA!
     LightSrc3D light{
@@ -72,8 +75,6 @@ public:
 // Kernel for converting 3D triangles to 2D triangles
 __global__ void tri3DsTo2DsKernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds, Camera3D cam,
-    // Other params if needed
-    
     int p_s, size_t size
 );
 

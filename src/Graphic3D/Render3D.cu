@@ -1,5 +1,8 @@
 #include <Render3D.cuh>
 
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+
 Render3D::Render3D(Camera3D *camera) {
     this->camera = camera;
 
@@ -11,17 +14,12 @@ Render3D::Render3D(Camera3D *camera) {
 
     // Memory allocation for device buffer
     CUDA_CHECK(cudaMalloc(&D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D)));
-
-    // Memory allocation for device triangles will be done in renderGPU
-    // As the count is dynamic and will be different each time
 }
 Render3D::~Render3D() {
     delete[] BUFFER;
 
     // Free device memory
     CUDA_CHECK(cudaFree(D_BUFFER));
-    CUDA_CHECK(cudaFree(D_TRI3DS));
-    CUDA_CHECK(cudaFree(D_TRI2DS));
 }
 
 // Reset all
@@ -63,8 +61,6 @@ __host__ __device__ Vec2D Render3D::toVec2D(const Camera3D &cam, Vec3D v) {
 
 // The main render function
 void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
-    Tri2D *tri2Ds = new Tri2D[size];
-
     // Set kernel parameters
     const size_t blockSize = 256;
     const size_t numBlocks = (size + blockSize - 1) / blockSize;
@@ -83,8 +79,18 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
     );
     CUDA_CHECK(cudaDeviceSynchronize());
 
-    // Copy tri2Ds back to host
-    CUDA_CHECK(cudaMemcpy(tri2Ds, D_TRI2DS, size * sizeof(Tri2D), cudaMemcpyDeviceToHost));
+    // Sort the 2D triangles by zDepth (and rearrange the 3D triangles accordingly)
+    thrust::device_vector<Tri2D> dev_tri2Ds(D_TRI2DS, D_TRI2DS + size);
+    thrust::device_vector<Tri3D> dev_tri3Ds(D_TRI3DS, D_TRI3DS + size);
+    // Sort using the thrust, while also rearranging the tri3Ds
+    thrust::sort_by_key(dev_tri2Ds.begin(), dev_tri2Ds.end(), dev_tri3Ds.begin(),
+        [] __device__ (const Tri2D& a, const Tri2D& b) -> bool {
+            return a.v1.zDepth > b.v1.zDepth;
+        }
+    );
+    // Copy back to device memory
+    thrust::copy(dev_tri2Ds.begin(), dev_tri2Ds.end(), D_TRI2DS);
+    thrust::copy(dev_tri3Ds.begin(), dev_tri3Ds.end(), D_TRI3DS);
 
     // Execute rasterization kernel
     rasterizeKernel<<<numBlocks, blockSize>>>(
@@ -99,9 +105,6 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
 
     // Copy pixels back to host buffer
     CUDA_CHECK(cudaMemcpy(BUFFER, D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyDeviceToHost));
-
-    // Free tri2Ds host memory
-    delete[] tri2Ds;
 
     // Free device memory
     CUDA_CHECK(cudaFree(D_TRI3DS));
@@ -144,6 +147,9 @@ __global__ void tri3DsTo2DsKernel(
         v2.x /= p_s; v2.y /= p_s;
         v3.x /= p_s; v3.y /= p_s;
 
+        // IMPORTANT: v1 -> v3 will have ascending zDepth
+        // (note: we cannot use std::swap in device code)
+
         tri2Ds[i].v1 = v1;
         tri2Ds[i].v2 = v2;
         tri2Ds[i].v3 = v3;
@@ -161,10 +167,8 @@ __global__ void rasterizeKernel(
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < size) {
-        // If all 3 zDepth are negative, then then do nothing
-        if (tri2Ds[i].v1.zDepth <= 0 &&
-            tri2Ds[i].v2.zDepth <= 0 &&
-            tri2Ds[i].v3.zDepth <= 0) return;
+        // If the largest Z is less than 0, then do nothing
+        if (tri2Ds[i].v3.zDepth < 0) return;
 
         // If all 3 x or y are out of bounds, then do nothing
         if (tri2Ds[i].v1.x < 0 && tri2Ds[i].v2.x < 0 && tri2Ds[i].v3.x < 0) return;
@@ -197,9 +201,9 @@ __global__ void rasterizeKernel(
 
             // Check if the pixel is inside the triangle
             // (allow small margin of error)
-            if (barycentric.x < -0.0 ||
-                barycentric.y < -0.0 ||
-                barycentric.z < -0.0) continue;
+            if (barycentric.x < 0.0 ||
+                barycentric.y < 0.0 ||
+                barycentric.z < 0.0) continue;
 
             p.zDepth = Vec2D::barycentricCalc(
                 barycentric, tri2Ds[i].v1.zDepth, tri2Ds[i].v2.zDepth, tri2Ds[i].v3.zDepth
@@ -207,6 +211,7 @@ __global__ void rasterizeKernel(
 
             // Check if the pixel is closer than the current pixel
             if (!atomicMinDouble(&pixels[index].screen.zDepth, p.zDepth)) continue;
+            // if (pixels[index].screen.zDepth < p.zDepth) continue;
 
             // Get world position
             double px = Vec2D::barycentricCalc(

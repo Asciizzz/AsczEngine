@@ -33,28 +33,46 @@ public:
     __host__ __device__ Vec3D(double x=0, double y=0, double z=0);
 
     // Basic operations
-    __host__ __device__ static Vec3D add(const Vec3D& v1, const Vec3D& v2);
-    __host__ __device__ static Vec3D add(const Vec3D& v, double scalar);
-    __host__ __device__ static Vec3D add(const Vec3D* vs, int size);
-    __host__ __device__ static Vec3D sub(const Vec3D& v1, const Vec3D& v2);
-    __host__ __device__ static Vec3D mult(const Vec3D& v1, const Vec3D& v2);
-    __host__ __device__ static Vec3D mult(const Vec3D& v, double scalar);
-    __host__ __device__ static Vec3D absl(const Vec3D& v);
+    __host__ __device__
+    static Vec3D add(const Vec3D& v1, const Vec3D& v2);
+    __host__ __device__
+    static Vec3D add(const Vec3D& v, double scalar);
+    __host__ __device__
+    static Vec3D add(const Vec3D* vs, int size);
+    __host__ __device__
+    static Vec3D sub(const Vec3D& v1, const Vec3D& v2);
+    __host__ __device__
+    static Vec3D mult(const Vec3D& v1, const Vec3D& v2);
+    __host__ __device__
+    static Vec3D mult(const Vec3D& v, double scalar);
+    __host__ __device__
+    static Vec3D absl(const Vec3D& v);
 
     // Vector operations
-    __host__ __device__ static double dot(const Vec3D& v1, const Vec3D& v2);
-    __host__ __device__ static Vec3D cross(const Vec3D& v1, const Vec3D& v2);
+    __host__ __device__
+    static double dot(const Vec3D& v1, const Vec3D& v2);
+    __host__ __device__
+    static Vec3D cross(const Vec3D& v1, const Vec3D& v2);
 
     // Other operations
-    __host__ __device__ static double mag(const Vec3D& v);
-    __host__ __device__ static double dist(const Vec3D& v1, const Vec3D& v2);
+    __host__ __device__
+    static double mag(const Vec3D& v);
+    __host__ __device__
+    static double dist(const Vec3D& v1, const Vec3D& v2);
+    // __host__ __device__
+    // static Vec3D baricentric(const Vec3D& p, const Vec3D& v1, const Vec3D& v2, const Vec3D& v3);
 
     // Transformation
-    __host__ __device__ static Vec3D rotate(const Vec3D& v, const Vec3D& origin, const Vec3D& w);
-    __host__ __device__ static Vec3D scale(const Vec3D& v, const Vec3D& origin, const Vec3D& s);
-    __host__ __device__ static Vec3D scale(const Vec3D& v, const Vec3D& origin, const double s);
-    __host__ __device__ static Vec3D translate(const Vec3D& v, const Vec3D& t);
-    __host__ __device__ static Vec3D translate(const Vec3D& v, const double t);
+    __host__ __device__
+    static Vec3D rotate(const Vec3D& v, const Vec3D& origin, const Vec3D& w);
+    __host__ __device__
+    static Vec3D scale(const Vec3D& v, const Vec3D& origin, const Vec3D& s);
+    __host__ __device__
+    static Vec3D scale(const Vec3D& v, const Vec3D& origin, const double s);
+    __host__ __device__
+    static Vec3D translate(const Vec3D& v, const Vec3D& t);
+    __host__ __device__
+    static Vec3D translate(const Vec3D& v, const double t);
 };
 
 // Kernel for vector transformation

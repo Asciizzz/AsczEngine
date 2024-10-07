@@ -33,17 +33,20 @@ Plane3D::Plane3D(Vec3D v1, Vec3D v2, Vec3D v3) {
 }
 
 // f(x, y, z) = Ax + By + Cz + D
+__host__ __device__
 double Plane3D::equation(Vec3D v) {
     return a * v.x + b * v.y + c * v.z + d;
 }
 
 // Distance
+__host__ __device__
 double Plane3D::distance(Vec3D v, bool signedDist) {
     double dist = equation(v) / Vec3D::mag(normal);
     return signedDist ? dist : abs(dist);
 }
 
 // Intersection
+__host__ __device__
 Vec3D Plane3D::intersection(Vec3D v1, Vec3D v2) {
     Vec3D diff = Vec3D::sub(v2, v1);
     double ev1 = equation(v1);
@@ -54,6 +57,7 @@ Vec3D Plane3D::intersection(Vec3D v1, Vec3D v2) {
 }
 
 // Normal
+__host__ __device__
 Vec3D Plane3D::findNormal(Vec3D v1, Vec3D v2, Vec3D v3) {
     return Vec3D::cross(
         Vec3D::sub(v2, v1),

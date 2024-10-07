@@ -161,8 +161,8 @@ int main() {
         CSLOG->addLog("Welcome to AsczEngine 2.0", rainbow, 1);
 
         // FPS <= 10: Fully Red
-        // FPS >= 80: Fully Green
-        double gRatio = double(FPS->fps - 10) / 70;
+        // FPS >= 60: Fully Green
+        double gRatio = double(FPS->fps - 10) / 50;
         gRatio = std::max(0.0, std::min(gRatio, 1.0));
         sf::Color fpsColor((1 - gRatio) * 255, gRatio * 255, 0);
         CSLOG->addLog("FPS: " + std::to_string(FPS->fps), fpsColor);
@@ -171,14 +171,14 @@ int main() {
 
         // ================= Playground ====================
 
-        // // Rotate the light source
-        // RENDER->light.pos = Vec3D::rotate(
-        //     RENDER->light.pos, Vec3D(0, 0, 0),
-        //     Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-        // );
+        // Rotate the light source
+        RENDER->light.pos = Vec3D::rotate(
+            RENDER->light.pos, Vec3D(0, 0, 0),
+            Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+        );
 
-        // YOU are the light source
-        RENDER->light.pos = CAM->pos;
+        // // YOU are the light source
+        // RENDER->light.pos = CAM->pos;
 
         // ======= Main graphic rendering pipeline =======
         RENDER->renderGPU(tri_test, tri_count);
@@ -210,11 +210,11 @@ int main() {
         FPS->endFrame();
     }
 
-    delete FPS;
     delete CAM;
+    delete FPS;
+    delete CSLOG;
     delete RENDER;
     delete TEXTURE;
-    delete CSLOG;
     delete[] tri_test;
 
     return 0;

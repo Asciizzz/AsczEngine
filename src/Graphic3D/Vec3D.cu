@@ -66,6 +66,29 @@ __host__ __device__ double Vec3D::mag(const Vec3D& v) {
 __host__ __device__ double Vec3D::dist(const Vec3D& v1, const Vec3D& v2) {
     return mag(sub(v1, v2));
 }
+// __host__ __device__ Vec3D Vec3D::baricentric(const Vec3D& p, const Vec3D& v1, const Vec3D& v2, const Vec3D& v3) {
+//     // Get the lambda values and return them as a Vec3D
+
+//     // Check for parallelism with the axes
+//     if (v1.x == v2.x && v2.x == v3.x) {
+//         return Vec2D::barycentricLambda(
+//             Vec2D(p.y, p.z), Vec2D(v1.y, v1.z), Vec2D(v2.y, v2.z), Vec2D(v3.y, v3.z)
+//         );
+//     }
+//     if (v1.y == v2.y && v2.y == v3.y) {
+//         return Vec2D::barycentricLambda(
+//             Vec2D(p.x, p.z), Vec2D(v1.x, v1.z), Vec2D(v2.x, v2.z), Vec2D(v3.x, v3.z)
+//         );
+//     }
+//     if (v1.z == v2.z && v2.z == v3.z) {
+//         return Vec2D::barycentricLambda(
+//             Vec2D(p.x, p.y), Vec2D(v1.x, v1.y), Vec2D(v2.x, v2.y), Vec2D(v3.x, v3.y)
+//         );
+//     }
+//     return Vec2D::barycentricLambda(
+//         Vec2D(p.x, p.y), Vec2D(v1.x, v1.y), Vec2D(v2.x, v2.y), Vec2D(v3.x, v3.y)
+//     );
+// }
 
 // Transformation
 __host__ __device__ Vec3D Vec3D::rotate(const Vec3D& v, const Vec3D& origin, const Vec3D& w) {
