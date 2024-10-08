@@ -69,9 +69,7 @@ public:
     const size_t BLOCK_SIZE = 256;
 
     // BETA!
-    LightSrc3D LIGHT{
-        Vec3D(0, 0, 0),
-    };
+    LightSrc3D LIGHT;
 
     // To vec2D
     __host__ __device__ static Vec2D toVec2D(const Camera3D &cam, Vec3D v);

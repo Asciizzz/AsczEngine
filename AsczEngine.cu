@@ -25,21 +25,53 @@ int main() {
     CAM->pos = Vec3D(0, 0, 40);
     CAM->ang = Vec3D(0, -M_PI, 0);
 
-    RENDER->LIGHT.pos = Vec3D(0, 0, 50);
+    RENDER->LIGHT.pos = Vec3D(0, 200, 0);
 
-    std::vector<Tri3D> MODEL_OBJ = Tri3D::readObj(
-        "assets/Models/Buddha.obj"
-    );
+    // Function y = f(x, z) to create a 3D graph
+    std::vector<std::vector<Vec3D>> points;
+    std::vector<Tri3D> tris;
+    for (double x = -10; x < 10; x += 0.1) {
+        points.push_back(std::vector<Vec3D>());
+        for (double z = -10; z < 10; z += 0.1) {
+            double y = sin(x) * cos(z);
 
-    size_t tri_count = MODEL_OBJ.size();
+            points.back().push_back(Vec3D(x, y, z));
+        }
+    }
+
+    for (size_t x = 0; x < points.size() - 1; x++) {
+        for (size_t z = 0; z < points[x].size() - 1; z++) {
+            double cx = 50 + 150 * double(x) / points.size();
+            double cz = 50 + 150 * double(z) / points[x].size();
+            double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
+            Color3D color = Color3D(cx, cz, csqrt);
+
+            Tri3D tri1 = Tri3D(
+                points[x][z], points[x + 1][z], points[x][z + 1],
+                color
+            );
+            Tri3D tri2 = Tri3D(
+                points[x][z + 1], points[x + 1][z], points[x + 1][z + 1],
+                color
+            );
+
+            if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
+            if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
+
+            tris.push_back(tri1);
+            tris.push_back(tri2);
+        }
+    }
+
+    size_t tri_count = tris.size();
     Tri3D *tri_test = new Tri3D[tri_count];
 
-    for (int i = 0; i < tri_count; i++) {
-        MODEL_OBJ[i].v1 = Vec3D::scale(MODEL_OBJ[i].v1, Vec3D(), 10);
-        MODEL_OBJ[i].v2 = Vec3D::scale(MODEL_OBJ[i].v2, Vec3D(), 10);
-        MODEL_OBJ[i].v3 = Vec3D::scale(MODEL_OBJ[i].v3, Vec3D(), 10);
+    for (size_t i = 0; i < tri_count; i++) {
+        tris[i].v1 = Vec3D::scale(tris[i].v1, Vec3D(), 20);
+        tris[i].v2 = Vec3D::scale(tris[i].v2, Vec3D(), 20);
+        tris[i].v3 = Vec3D::scale(tris[i].v3, Vec3D(), 20);
 
-        tri_test[i] = MODEL_OBJ[i];
+        tri_test[i] = tris[i];
     }
 
     // Unrelated stuff
@@ -150,8 +182,8 @@ int main() {
         // Rotate the light source
         RENDER->LIGHT.pos = Vec3D::rotate(
             RENDER->LIGHT.pos, Vec3D(0, 0, 0),
-            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+            Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+            // Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
         );
 
         // // YOU are the light source
