@@ -6,6 +6,8 @@
 #include <Cube3D.cuh>
 
 int main() {
+
+    // =================== INITIALIZATION =======================
     FpsHandle *FPS = new FpsHandle();
     Camera3D *CAM = new Camera3D();
     Render3D *RENDER = new Render3D(CAM);
@@ -22,12 +24,12 @@ int main() {
     // =================== EXPERIMENTATION =======================
 
     // Initialize stuff
-    CAM->pos = Vec3D(0, 100, 0);
+    CAM->pos = Vec3D(0, 40, 0);
     CAM->ang = Vec3D(0, -M_PI, 0);
 
-    RENDER->LIGHT.pos = Vec3D(0, 200, 0);
+    RENDER->LIGHT.pos = Vec3D(0, 0, 0);
 
-    // Function y = f(x, z) to create a 3D graph
+        // Function y = f(x, z) to create a 3D graph
     std::vector<std::vector<Vec3D>> points;
     std::vector<Tri3D> tris;
     for (double x = -10; x < 10; x += 0.1) {
@@ -44,7 +46,7 @@ int main() {
             double cx = 50 + 150 * double(x) / points.size();
             double cz = 50 + 150 * double(z) / points[x].size();
             double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
-            Color3D color = Color3D(cx, cz, csqrt);
+            Color3D color = Color3D(csqrt, cx, cz);
 
             Tri3D tri1 = Tri3D(
                 points[x][z], points[x + 1][z], points[x][z + 1],
@@ -81,7 +83,6 @@ int main() {
     short cycle = 0;
 
     while (WINDOW.isOpen()) {
-        // Frame start
         FPS->startFrame();
 
         // Resets
@@ -96,14 +97,6 @@ int main() {
                 WINDOW.close();
             }
 
-            // Press space to toggle focus
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-                CAM->focus = !CAM->focus;
-
-                // Hide/unhide cursor
-                WINDOW.setMouseCursorVisible(!CAM->focus);
-            }
-
             // Scroll to change fov 
             if (event.type == sf::Event::MouseWheelScrolled) {
                 if (event.mouseWheelScroll.delta > 0)
@@ -112,6 +105,17 @@ int main() {
                     CAM->fov += 5; // Zoom out
 
                 CAM->fov = std::max(10.0, std::min(CAM->fov, 170.0));
+            }
+
+            // Press space to face (0, 0, 0)
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+                CAM->facePoint(Vec3D(0, 0, 0));
+            }
+
+            // F1 to toggle focus
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F1)) {
+                CAM->focus = !CAM->focus;
+                WINDOW.setMouseCursorVisible(!CAM->focus);
             }
         }
 
@@ -160,10 +164,6 @@ int main() {
             rainbowR += step; rainbowB -= step;
             if (rainbowR >= 255) cycle = 0;
         }
-        // Ensure the value is in range
-        rainbowR = std::max(0.0, std::min(rainbowR, 255.0));
-        rainbowG = std::max(0.0, std::min(rainbowG, 255.0));
-        rainbowB = std::max(0.0, std::min(rainbowB, 255.0));
 
         sf::Color rainbow = sf::Color(rainbowR, rainbowG, rainbowB);
         CSLOG->addLog("Welcome to AsczEngine 2.0", rainbow, 1);
@@ -179,33 +179,25 @@ int main() {
 
         // ================= Playground ====================
 
-        // Rotate the light source
-        RENDER->LIGHT.pos = Vec3D::rotate(
-            RENDER->LIGHT.pos, Vec3D(0, 0, 0),
-            Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-            // Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
-        );
+        // // Rotate the light source
+        // RENDER->LIGHT.pos = Vec3D::rotate(
+        //     RENDER->LIGHT.pos, Vec3D(0, 0, 0),
+        //     // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+        //     Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+        // );
 
-        // // YOU are the light source
-        // RENDER->LIGHT.pos = CAM->pos;
-        // RENDER->LIGHT.normal = CAM->plane.normal;
+        // YOU are the light source
+        RENDER->LIGHT.pos = CAM->pos;
+        RENDER->LIGHT.normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
         RENDER->renderGPU(tri_test, tri_count);
 
-        // Update the texture
         TEXTURE->updateTexture(RENDER);
-
-        // Draw the texture
         WINDOW.draw(TEXTURE->sprite);
-
-        // Draw the log
         CSLOG->drawLog(WINDOW);
-
-        // Display the window
         WINDOW.display();
 
-        // Frame end
         FPS->endFrame();
     }
 

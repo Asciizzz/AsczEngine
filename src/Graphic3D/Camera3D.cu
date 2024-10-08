@@ -43,6 +43,7 @@ void Camera3D::facePoint(Vec3D target) {
 
     ang.x = atan2(diff.y, xzLen);
     ang.y = atan2(diff.z, diff.x);
+    ang.z = 0; // Just incase we'd ever add roll
 }
 
 void Camera3D::updateLog() {

@@ -263,6 +263,13 @@ __global__ void rasterizeKernel(
         );
         Vec3D world(px, py, pz);
 
+        if (!tri3Ds[i].lighting) {
+            pixels[index] = {
+                tri3Ds[i].color, tri3Ds[i].normal, world, screen, true
+            };
+            continue;
+        }
+
         // BETA: Light color manipulation
         Color3D color = tri3Ds[i].color;
 

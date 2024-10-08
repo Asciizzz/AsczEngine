@@ -34,6 +34,7 @@ public:
     Color3D color;
     Vec3D normal;
     bool isTwoSided;
+    bool lighting = true;
 
     // Default constructor
     __host__ __device__ Tri3D() {};
