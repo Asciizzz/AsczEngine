@@ -27,7 +27,7 @@ public:
 };
 
 // Create a kernel that would fill in pixel from buffer to sf::Texture
-__global__ void fillPixel(
+__global__ void fillPixelKernel(
     sf::Uint8 *pixels, Pixel3D *pixel3D,
     int b_w, int b_h, int p_s
 );

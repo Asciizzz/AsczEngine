@@ -22,19 +22,25 @@ int main() {
     WINDOW.setMouseCursorVisible(false);
 
     // =================== EXPERIMENTATION =======================
-    CAM->pos = Vec3D(0, 20, -100);
+
+    // Initialize camera
+    CAM->pos = Vec3D(0, 0, 40);
+    CAM->ang = Vec3D(0, -M_PI, 0);
+
+    // Initialize light source
+    RENDER->LIGHT.pos = Vec3D(0, 0, 40);
 
     std::vector<Tri3D> MODEL_OBJ = Tri3D::readObj(
-        "assets/Models/City/Residential Buildings 001.obj"
+        "assets/Models/Buddha.obj"
     );
 
     size_t tri_count = MODEL_OBJ.size();
     Tri3D *tri_test = new Tri3D[tri_count];
 
     for (int i = 0; i < tri_count; i++) {
-        MODEL_OBJ[i].v1 = Vec3D::scale(MODEL_OBJ[i].v1, Vec3D(), 10);
-        MODEL_OBJ[i].v2 = Vec3D::scale(MODEL_OBJ[i].v2, Vec3D(), 10);
-        MODEL_OBJ[i].v3 = Vec3D::scale(MODEL_OBJ[i].v3, Vec3D(), 10);
+        MODEL_OBJ[i].v1 = Vec3D::scale(MODEL_OBJ[i].v1, Vec3D(), 20);
+        MODEL_OBJ[i].v2 = Vec3D::scale(MODEL_OBJ[i].v2, Vec3D(), 20);
+        MODEL_OBJ[i].v3 = Vec3D::scale(MODEL_OBJ[i].v3, Vec3D(), 20);
 
         tri_test[i] = MODEL_OBJ[i];
     }
@@ -50,9 +56,8 @@ int main() {
         FPS->startFrame();
 
         // Resets
-        CSLOG->clear();
         RENDER->reset();
-        WINDOW.clear(sf::Color::White);
+        CSLOG->clear();
 
     // =================== EVENT HANDLING =======================
         sf::Event event;
@@ -68,6 +73,16 @@ int main() {
 
                 // Hide/unhide cursor
                 WINDOW.setMouseCursorVisible(!CAM->focus);
+            }
+
+            // Scroll to change fov 
+            if (event.type == sf::Event::MouseWheelScrolled) {
+                if (event.mouseWheelScroll.delta > 0)
+                    CAM->fov -= 5; // Zoom in
+                else
+                    CAM->fov += 5; // Zoom out
+
+                CAM->fov = std::max(10.0, std::min(CAM->fov, 170.0));
             }
         }
 
@@ -136,14 +151,15 @@ int main() {
         // ================= Playground ====================
 
         // Rotate the light source
-        // RENDER->light.pos = Vec3D::rotate(
-        //     RENDER->light.pos, Vec3D(0, 0, 0),
-        //     Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-        // );
+        RENDER->LIGHT.pos = Vec3D::rotate(
+            RENDER->LIGHT.pos, Vec3D(0, 0, 0),
+            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+        );
 
-        // YOU are the light source
-        RENDER->light.pos = CAM->pos;
-        RENDER->light.normal = CAM->plane.normal;
+        // // YOU are the light source
+        // RENDER->light.pos = CAM->pos;
+        // RENDER->light.normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
         RENDER->renderGPU(tri_test, tri_count);

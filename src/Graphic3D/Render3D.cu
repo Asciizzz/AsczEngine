@@ -3,12 +3,19 @@
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
 
-Render3D::Render3D(Camera3D *camera) {
-    this->camera = camera;
+Render3D::Render3D(Camera3D *camera, int w_w, int w_h, int p_s) {
+    this->CAMERA = camera;
+
+    // Window settings
+    W_WIDTH = w_w;
+    W_HEIGHT = w_h;
+    W_CENTER_X = w_w / 2;
+    W_CENTER_Y = w_h / 2;
+    PIXEL_SIZE = p_s;
 
     // Initialize buffer
-    BUFFER_WIDTH = W_WIDTH / PIXEL_SIZE;
-    BUFFER_HEIGHT = W_HEIGHT / PIXEL_SIZE;
+    BUFFER_WIDTH = w_w / p_s;
+    BUFFER_HEIGHT = w_h / p_s;
     BUFFER_SIZE = BUFFER_WIDTH * BUFFER_HEIGHT;
     BUFFER = new Pixel3D[BUFFER_SIZE];
 
@@ -17,9 +24,30 @@ Render3D::Render3D(Camera3D *camera) {
 }
 Render3D::~Render3D() {
     delete[] BUFFER;
-
-    // Free device memory
     CUDA_CHECK(cudaFree(D_BUFFER));
+}
+
+void Render3D::resize(int w_w, int w_h, int p_s) {
+    // Update window settings
+    W_WIDTH = w_w;
+    W_HEIGHT = w_h;
+    W_CENTER_X = w_w / 2;
+    W_CENTER_Y = w_h / 2;
+    PIXEL_SIZE = p_s;
+
+    // Update buffer settings
+    BUFFER_WIDTH = w_w / p_s;
+    BUFFER_HEIGHT = w_h / p_s;
+    BUFFER_SIZE = BUFFER_WIDTH * BUFFER_HEIGHT;
+
+    // Reset buffer
+    delete[] BUFFER;
+    BUFFER = new Pixel3D[BUFFER_SIZE];
+
+    // Free old device memory
+    CUDA_CHECK(cudaFree(D_BUFFER));
+    // Memory allocation for device buffer
+    CUDA_CHECK(cudaMalloc(&D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D)));
 }
 
 // Reset all
@@ -62,8 +90,7 @@ __host__ __device__ Vec2D Render3D::toVec2D(const Camera3D &cam, Vec3D v) {
 // The main render function
 void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
     // Set kernel parameters
-    const size_t blockSize = 256;
-    const size_t numBlocks = (size + blockSize - 1) / blockSize;
+    const size_t numBlocks = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     // Allocate triangles memory on device
     CUDA_CHECK(cudaMalloc(&D_TRI3DS, size * sizeof(Tri3D)));
@@ -74,8 +101,8 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
     CUDA_CHECK(cudaMemcpy(D_BUFFER, BUFFER, BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyHostToDevice));
 
     // Execute tri3DsTo2Ds kernel
-    tri3DsTo2DsKernel<<<numBlocks, blockSize>>>(
-        D_TRI2DS, D_TRI3DS, *camera, PIXEL_SIZE, size
+    tri3DsTo2DsKernel<<<numBlocks, BLOCK_SIZE>>>(
+        D_TRI2DS, D_TRI3DS, *CAMERA, PIXEL_SIZE, size
     );
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -93,13 +120,19 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
     thrust::copy(dev_tri3Ds.begin(), dev_tri3Ds.end(), D_TRI3DS);
 
     // Execute rasterization kernel
-    rasterizeKernel<<<numBlocks, blockSize>>>(
+    rasterizeKernel<<<numBlocks, BLOCK_SIZE>>>(
         // Buffer and tris
         D_BUFFER, D_TRI2DS, D_TRI3DS,
         // Other properties if needed
-        light,
+        LIGHT,
         // Size properties
         BUFFER_WIDTH, BUFFER_HEIGHT, size
+    );
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+    // For every unoccupied pixel, fill it with the default color
+    fillBufferKernel<<<BUFFER_SIZE / BLOCK_SIZE + 1, BLOCK_SIZE>>>(
+        D_BUFFER, DEFAULT_COLOR, BUFFER_SIZE
     );
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -131,6 +164,13 @@ __device__ inline bool atomicMinDouble(double *address, double val) {
     } while (assumed != old);
 
     return __longlong_as_double(old) > val;
+}
+
+__global__ void fillBufferKernel(
+    Pixel3D *buffer, Color3D color, size_t size
+) {
+    size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < size && !buffer[i].active) buffer[i].color = color;
 }
 
 __global__ void tri3DsTo2DsKernel(
@@ -193,10 +233,10 @@ __global__ void rasterizeKernel(
         for (int y = minY - 1; y <= maxY + 1; y++) {
             int index = x + y * b_w;
             // Check if the pixel is inside the triangle
-            Vec2D p(x, y);
+            Vec2D screen(x, y);
 
             Vec3D barycentric = Vec2D::barycentricLambda(
-                p, tri2Ds[i].v1, tri2Ds[i].v2, tri2Ds[i].v3
+                screen, tri2Ds[i].v1, tri2Ds[i].v2, tri2Ds[i].v3
             );
 
             // Check if the pixel is inside the triangle
@@ -205,12 +245,12 @@ __global__ void rasterizeKernel(
                 barycentric.y < 0.0 ||
                 barycentric.z < 0.0) continue;
 
-            p.zDepth = Vec2D::barycentricCalc(
+            screen.zDepth = Vec2D::barycentricCalc(
                 barycentric, tri2Ds[i].v1.zDepth, tri2Ds[i].v2.zDepth, tri2Ds[i].v3.zDepth
             );
 
             // Check if the pixel is closer than the current pixel
-            if (!atomicMinDouble(&pixels[index].screen.zDepth, p.zDepth)) continue;
+            if (!atomicMinDouble(&pixels[index].screen.zDepth, screen.zDepth)) continue;
             // if (pixels[index].screen.zDepth < p.zDepth) continue;
 
             // Get world position
@@ -223,20 +263,19 @@ __global__ void rasterizeKernel(
             double pz = Vec2D::barycentricCalc(
                 barycentric, tri3Ds[i].v1.z, tri3Ds[i].v2.z, tri3Ds[i].v3.z
             );
-            Vec3D worldPos(px, py, pz);
+            Vec3D world(px, py, pz);
 
             // BETA: Light color manipulation
             Color3D color = tri3Ds[i].color;
 
-            Vec3D lightDir = Vec3D::sub(light.pos, worldPos);
+            Vec3D lightDir = Vec3D::sub(light.pos, world);
             double cosA = Vec3D::dot(tri3Ds[i].normal, lightDir) /
                 (Vec3D::mag(tri3Ds[i].normal) * Vec3D::mag(lightDir));
             // Note: we cannot use std::max and std::min in device code
-            // if (cosA < 0) cosA = 0;
-            if (cosA < 0) cosA = -cosA;
+            if (cosA < 0) cosA = 0;
+            // if (cosA < 0) cosA = -cosA;
 
             double ratio = light.ambient + cosA * (light.specular - light.ambient);
-            color.runtimeRGB = Color3D::x255(color.rawRGB);
 
             color.runtimeRGB.mult(ratio);
 
@@ -246,11 +285,11 @@ __global__ void rasterizeKernel(
             color.runtimeRGB.v3 = color.runtimeRGB.v3 * light.rgbRatio.z;
 
             // Restrict color values
-            color.runtimeRGB.restrict(true);
+            color.runtimeRGB.restrictRGB();
 
             // Set buffer values
             pixels[index] = {
-                color, tri3Ds[i].normal, worldPos, p
+                color, tri3Ds[i].normal, world, screen, true
             };
         }
     }

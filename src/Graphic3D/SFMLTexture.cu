@@ -25,7 +25,7 @@ void SFMLTexture::updateTexture(Render3D *render) {
     CUDA_CHECK(cudaMemcpy(d_buffer, render->BUFFER, render->BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyHostToDevice));
 
     // Execute fillPixel kernel
-    fillPixel<<<numBlocks, blockSize>>>(
+    fillPixelKernel<<<numBlocks, blockSize>>>(
         d_sfPixels, d_buffer,
         render->BUFFER_WIDTH, render->BUFFER_HEIGHT,
         render->PIXEL_SIZE
@@ -39,8 +39,8 @@ void SFMLTexture::updateTexture(Render3D *render) {
     texture.update(pixels);
 }
 
-__global__ void fillPixel(
-    sf::Uint8 *pixels, Pixel3D *pixel3D,
+__global__ void fillPixelKernel(
+    sf::Uint8 *pixels, Pixel3D *buffer,
     int b_w, int b_h, int p_s
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -56,7 +56,7 @@ __global__ void fillPixel(
             p_index *= 4;
 
             // Get the pixel color
-            Color3D color = pixel3D[b_index].color;
+            Color3D color = buffer[b_index].color;
 
             // Fill the pixel
             pixels[p_index] = color.runtimeRGB.v1;

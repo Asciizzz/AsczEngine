@@ -32,22 +32,15 @@ __host__ __device__ void ColorVec::mult(double scalar) {
     v2 *= scalar;
     v3 *= scalar;
 }
-__host__ __device__ void ColorVec::restrict(bool x255) {
-    if (x255) {
-        v1 = std::min(255.0, std::max(0.0, v1));
-        v2 = std::min(255.0, std::max(0.0, v2));
-        v3 = std::min(255.0, std::max(0.0, v3));
-    } else {
-        v1 = std::min(1.0, std::max(0.0, v1));
-        v2 = std::min(1.0, std::max(0.0, v2));
-        v3 = std::min(1.0, std::max(0.0, v3));
-    }
+__host__ __device__ void ColorVec::restrictRGB() {
+    v1 = std::min(255.0, std::max(0.0, v1));
+    v2 = std::min(255.0, std::max(0.0, v2));
+    v3 = std::min(255.0, std::max(0.0, v3));
 }
 
-__host__ __device__ Color3D::Color3D(double r, double g, double b, double a, bool isDouble) {
+__host__ __device__ Color3D::Color3D(double r, double g, double b, double a) {
     // RGB
-    if (isDouble) rawRGB = {r, g, b};
-    else rawRGB = {r / 255, g / 255, b / 255};
+    rawRGB = {r, g, b};
     runtimeRGB = rawRGB;
 
     // HSL
@@ -59,9 +52,9 @@ __host__ __device__ Color3D::Color3D(double r, double g, double b, double a, boo
 }
 
 __host__ __device__ ColorVec Color3D::toHSL(ColorVec rgb) {
-    double r = rgb.v1;
-    double g = rgb.v2;
-    double b = rgb.v3;
+    double r = rgb.v1 / 255;
+    double g = rgb.v2 / 255;
+    double b = rgb.v3 / 255;
 
     double max = std::max(r, std::max(g, b));
     double min = std::min(r, std::min(g, b));
@@ -101,7 +94,11 @@ __host__ __device__ ColorVec Color3D::toRGB(ColorVec hsl) {
     else if (h < 5.0 / 6) { r = x; g = 0; b = c; }
     else { r = c; g = 0; b = x; }
 
-    return {r + m, g + m, b + m};
+    ColorVec rgb = {r + m, g + m, b + m};
+    rgb.mult(255);
+    rgb.restrictRGB();
+
+    return rgb;
 }
 
 __host__ __device__ ColorVec Color3D::x255(ColorVec vec) {

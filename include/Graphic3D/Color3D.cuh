@@ -10,7 +10,7 @@ struct ColorVec {
     // In range 0-1
     double v1, v2, v3;
     __host__ __device__ void mult(double scalar);
-    __host__ __device__ void restrict(bool x255=false);
+    __host__ __device__ void restrictRGB();
 };
 
 class Color3D {
@@ -25,7 +25,7 @@ public:
     ColorVec runtimeHSL;
 
     // Keep in mind the isDouble is rarely used
-    __host__ __device__ Color3D(double r=0, double g=0, double b=0, double a=1, bool isDouble=false);
+    __host__ __device__ Color3D(double r=0, double g=0, double b=0, double a=1);
 
     // Conversion
     __host__ __device__ static ColorVec toHSL(ColorVec rgb);

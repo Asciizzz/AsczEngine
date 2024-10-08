@@ -8,6 +8,7 @@ struct Pixel3D {
     Vec3D normal;
     Vec3D world;
     Vec2D screen;
+    bool active = false;
 };
 
 // BETA!!!
@@ -27,38 +28,44 @@ struct LightSrc3D {
     to reduce green and blue light
     while increasing red light
     */
-    Vec3D rgbRatio = Vec3D(1.4, 0.7, 0.7);
+    Vec3D rgbRatio = Vec3D(1, 1, 1);
 };
 
 class Render3D {
 public:
-    Render3D(Camera3D *camera);
+    Render3D(Camera3D *camera, int w_w=1600, int w_h=900, int p_s=4);
     ~Render3D();
 
+    void resize(int w_w, int w_h, int p_s);
+
     // Camera
-    Camera3D *camera;
+    Camera3D *CAMERA;
 
     // Window settings
     std::string W_TITLE = "AsczEngine v2.0";
-    int W_WIDTH = 1600;
-    int W_HEIGHT = 900;
-    int W_CENTER_X = W_WIDTH / 2;
-    int W_CENTER_Y = W_HEIGHT / 2;
+    int W_WIDTH;
+    int W_HEIGHT;
+    int W_CENTER_X;
+    int W_CENTER_Y;
+    int PIXEL_SIZE;
+
+    // Default color
+    Color3D DEFAULT_COLOR = Color3D(10, 10, 10);
 
     // Buffer
-    int PIXEL_SIZE = 4;
-    int BUFFER_SIZE;
     int BUFFER_WIDTH;
     int BUFFER_HEIGHT;
+    int BUFFER_SIZE;
     Pixel3D *BUFFER;
 
     // CUDA stuffs
     Pixel3D *D_BUFFER; 
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
+    const size_t BLOCK_SIZE = 256;
 
     // BETA!
-    LightSrc3D light{
+    LightSrc3D LIGHT{
         Vec3D(0, 200, 0),
     };
 
@@ -72,6 +79,11 @@ public:
     // Reset all
     void reset();
 };
+
+// Kernel for filling every pixel in the buffer with a default color
+__global__ void fillBufferKernel(
+    Pixel3D *buffer, Color3D color, size_t size
+);
 
 // Kernel for converting 3D triangles to 2D triangles
 __global__ void tri3DsTo2DsKernel(
