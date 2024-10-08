@@ -10,7 +10,7 @@ int main() {
     // =================== INITIALIZATION =======================
     FpsHandle *FPS = new FpsHandle();
     Camera3D *CAM = new Camera3D();
-    Render3D *RENDER = new Render3D(CAM);
+    Render3D *RENDER = new Render3D(CAM, 1600, 900, 4);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
 
     // Debugging
@@ -24,56 +24,97 @@ int main() {
     // =================== EXPERIMENTATION =======================
 
     // Initialize stuff
-    CAM->pos = Vec3D(0, 40, 0);
-    CAM->ang = Vec3D(0, -M_PI, 0);
+    CAM->pos = Vec3D(0, 0, -50);
+    CAM->ang = Vec3D(0, M_PI, 0);
 
-    RENDER->LIGHT.pos = Vec3D(0, 0, 0);
+    RENDER->LIGHT.pos = Vec3D(0, 0, 12);
 
-        // Function y = f(x, z) to create a 3D graph
-    std::vector<std::vector<Vec3D>> points;
-    std::vector<Tri3D> tris;
-    for (double x = -10; x < 10; x += 0.1) {
-        points.push_back(std::vector<Vec3D>());
-        for (double z = -10; z < 10; z += 0.1) {
-            double y = sin(x) * cos(z);
+    std::vector<Tri3D> TRI_VEC = Tri3D::readObj(
+        "assets/Models/Sukuna.obj"
+    );
 
-            points.back().push_back(Vec3D(x, y, z));
-        }
-    }
+    // Create a cube
+    double size = 1.5;
 
-    for (size_t x = 0; x < points.size() - 1; x++) {
-        for (size_t z = 0; z < points[x].size() - 1; z++) {
-            double cx = 50 + 150 * double(x) / points.size();
-            double cz = 50 + 150 * double(z) / points[x].size();
-            double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
-            Color3D color = Color3D(csqrt, cx, cz);
+    // Positive X face
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, size, size), Vec3D(size, -size, size), Vec3D(size, -size, -size),
+        Vec3D(-1, 0, 0), Color3D(255, 255, 255)
+    ));
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, size, size), Vec3D(size, -size, -size), Vec3D(size, size, -size),
+        Vec3D(-1, 0, 0), Color3D(255, 255, 255)
+    ));
+    // Negative X face
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(-size, size, size), Vec3D(-size, -size, size), Vec3D(-size, -size, -size),
+        Vec3D(1, 0, 0), Color3D(255, 255, 255)
+    ));
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(-size, size, size), Vec3D(-size, -size, -size), Vec3D(-size, size, -size),
+        Vec3D(1, 0, 0), Color3D(255, 255, 255)
+    ));
 
-            Tri3D tri1 = Tri3D(
-                points[x][z], points[x + 1][z], points[x][z + 1],
-                color
-            );
-            Tri3D tri2 = Tri3D(
-                points[x][z + 1], points[x + 1][z], points[x + 1][z + 1],
-                color
-            );
+    // Positive Y face
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, size, size), Vec3D(-size, size, size), Vec3D(-size, size, -size),
+        Vec3D(0, -1, 0), Color3D(255, 255, 255)
+    ));
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, size, size), Vec3D(-size, size, -size), Vec3D(size, size, -size),
+        Vec3D(0, -1, 0), Color3D(255, 255, 255)
+    ));
+    // Negative Y face
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, -size, size), Vec3D(-size, -size, size), Vec3D(-size, -size, -size),
+        Vec3D(0, 1, 0), Color3D(255, 255, 255)
+    ));
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, -size, size), Vec3D(-size, -size, -size), Vec3D(size, -size, -size),
+        Vec3D(0, 1, 0), Color3D(255, 255, 255)
+    ));
 
-            if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
-            if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
+    // Positive Z face
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, size, size), Vec3D(-size, size, size), Vec3D(-size, -size, size),
+        Vec3D(0, 0, -1), Color3D(255, 255, 255)
+    ));
+    TRI_VEC.push_back(Tri3D(
+        Vec3D(size, size, size), Vec3D(-size, -size, size), Vec3D(size, -size, size),
+        Vec3D(0, 0, -1), Color3D(255, 255, 255)
+    ));
+    // // Negative Z face
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, -size), Vec3D(-size, size, -size), Vec3D(-size, -size, -size),
+    //     Vec3D(0, 0, 1)
+    // ));
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, -size), Vec3D(-size, -size, -size), Vec3D(size, -size, -size),
+    //     Vec3D(0, 0, 1)
+    // ));
 
-            tris.push_back(tri1);
-            tris.push_back(tri2);
-        }
-    }
-
-    size_t tri_count = tris.size();
+    size_t tri_count = TRI_VEC.size();
+    tri_count += tri_count % 2;
+    size_t tri_chunk = tri_count / 2;
     Tri3D *tri_test = new Tri3D[tri_count];
+    Tri3D *tri_part1 = new Tri3D[tri_chunk];
+    Tri3D *tri_part2 = new Tri3D[tri_chunk];
 
-    for (size_t i = 0; i < tri_count; i++) {
-        tris[i].v1 = Vec3D::scale(tris[i].v1, Vec3D(), 20);
-        tris[i].v2 = Vec3D::scale(tris[i].v2, Vec3D(), 20);
-        tris[i].v3 = Vec3D::scale(tris[i].v3, Vec3D(), 20);
+    for (int i = 0; i < tri_count; i++) {
+        TRI_VEC[i].v1 = Vec3D::scale(TRI_VEC[i].v1, Vec3D(), 10);
+        TRI_VEC[i].v2 = Vec3D::scale(TRI_VEC[i].v2, Vec3D(), 10);
+        TRI_VEC[i].v3 = Vec3D::scale(TRI_VEC[i].v3, Vec3D(), 10);
 
-        tri_test[i] = tris[i];
+        // int rgb = i % 2 == 0 ? 255 : 20;
+        // TRI_VEC[i].color = Color3D(rgb, rgb, rgb);
+        // TRI_VEC[i].lighting = false;
+
+        tri_test[i] = TRI_VEC[i];
+    }
+
+    for (int i = 0; i < tri_chunk; i++) {
+        tri_part1[i] = tri_test[i];
+        tri_part2[i] = tri_test[i + tri_chunk];
     }
 
     // Unrelated stuff
@@ -179,18 +220,20 @@ int main() {
 
         // ================= Playground ====================
 
-        // // Rotate the light source
-        // RENDER->LIGHT.pos = Vec3D::rotate(
-        //     RENDER->LIGHT.pos, Vec3D(0, 0, 0),
-        //     // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-        //     Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
-        // );
+        // Rotate the light source
+        RENDER->LIGHT.pos = Vec3D::rotate(
+            RENDER->LIGHT.pos, Vec3D(0, 0, 0),
+            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+        );
 
-        // YOU are the light source
-        RENDER->LIGHT.pos = CAM->pos;
-        RENDER->LIGHT.normal = CAM->plane.normal;
+        // // YOU are the light source
+        // RENDER->LIGHT.pos = CAM->pos;
+        // RENDER->LIGHT.normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
+        // RENDER->renderGPU(tri_part1, tri_chunk);
+        // RENDER->renderGPU(tri_part2, tri_chunk);
         RENDER->renderGPU(tri_test, tri_count);
 
         TEXTURE->updateTexture(RENDER);

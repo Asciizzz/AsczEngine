@@ -2,6 +2,7 @@
 
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
+#include <omp.h>
 
 Render3D::Render3D(Camera3D *camera, int w_w, int w_h, int p_s) {
     // Window settings

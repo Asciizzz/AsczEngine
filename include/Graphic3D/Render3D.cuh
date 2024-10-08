@@ -59,11 +59,23 @@ public:
     int BUFFER_HEIGHT;
     int BUFFER_SIZE;
     Pixel3D *BUFFER;
-    double *DEPTH; // VERY IMPORTANT TO AVOID RACE CONDITIONS
+
+    /*
+    We will perform rasterization, BUT only get depth first to avoid
+    lighting calculations that would eventually be discarded
+    as we find another pixel that is closer to the camera.
+
+    After we have the index of the Triangles of the pixel, we will
+    finally perform the lighting calculations.
+     */
+    double *BUFFER_DEPTH;
+    int *BUFFER_INDEX; // INCREDIBLY IMPORTANT
 
     // CUDA stuffs
     Pixel3D *D_BUFFER;
-    double *D_DEPTH; 
+    double *D_BUFF_DEPTH;
+    int *D_BUFF_INDEX;
+
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
     const size_t BLOCK_SIZE = 256;
