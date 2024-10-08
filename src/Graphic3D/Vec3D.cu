@@ -132,25 +132,19 @@ __global__ void rotateKernel(
     Vec3D* newVs, const Vec3D* oldVs, Vec3D origin, Vec3D w, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < size) {
-        newVs[i] = Vec3D::rotate(oldVs[i], origin, w);
-    }
+    if (i < size) newVs[i] = Vec3D::rotate(oldVs[i], origin, w);
 }
 
 __global__ void scaleKernel(
     Vec3D* newVs, const Vec3D* oldVs, Vec3D origin, Vec3D s, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < size) {
-        newVs[i] = Vec3D::scale(oldVs[i], origin, s);
-    }
+    if (i < size) newVs[i] = Vec3D::scale(oldVs[i], origin, s);
 }
 
 __global__ void translateKernel(
     Vec3D* newVs, const Vec3D* oldVs, Vec3D t, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < size) {
-        newVs[i] = Vec3D::translate(oldVs[i], t);
-    }
+    if (i < size) newVs[i] = Vec3D::translate(oldVs[i], t);
 }

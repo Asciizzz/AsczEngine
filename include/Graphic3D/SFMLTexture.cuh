@@ -4,6 +4,13 @@
 #include <SFML/Graphics.hpp>
 #include <Render3D.cuh>
 
+/*
+Idea: since you cant just execute draw function in parallel, you can
+instead create a texture, fill it with pixels IN PARALLEL, and then
+draw the texture to the window. This way, you can utilize the GPU
+to fill the pixels, and the CPU to draw the texture.
+*/
+
 class SFMLTexture {
 public:
     sf::Texture texture;

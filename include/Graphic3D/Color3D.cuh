@@ -30,7 +30,6 @@ public:
     // Conversion
     __host__ __device__ static ColorVec toHSL(ColorVec rgb);
     __host__ __device__ static ColorVec toRGB(ColorVec hsl);
-    __host__ __device__ static ColorVec x255(ColorVec vec);
 
     // Fun stuff
     __host__ __device__ static Color3D random();

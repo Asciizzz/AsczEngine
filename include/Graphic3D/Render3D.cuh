@@ -9,6 +9,7 @@ struct Pixel3D {
     Vec3D world;
     Vec2D screen;
     bool active = false;
+    bool valid = false;
 };
 
 // BETA!!!
@@ -69,7 +70,7 @@ public:
 
     // BETA!
     LightSrc3D LIGHT{
-        Vec3D(0, 200, 0),
+        Vec3D(0, 0, 0),
     };
 
     // To vec2D

@@ -9,26 +9,26 @@ __global__ void fillPixel(
     int b_w, int b_h, int p_s
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < b_w * b_h) {
-        int x = i % b_w;
-        int y = i / b_w;
-        int b_index = x + y * b_w;
+    if (i >= b_w * b_h) return;
 
-        for (int i = 0; i < p_s; i++)
-        for (int j = 0; j < p_s; j++) {
+    int x = i % b_w;
+    int y = i / b_w;
+    int b_index = x + y * b_w;
 
-        int p_index = x * p_s + i + (y * p_s + j) * b_w * p_s;
-        p_index *= 4;
+    for (int i = 0; i < p_s; i++)
+    for (int j = 0; j < p_s; j++) {
 
-        // Get the pixel color
-        Color3D color = pixel3D[b_index].color;
+    int p_index = x * p_s + i + (y * p_s + j) * b_w * p_s;
+    p_index *= 4;
 
-        // Fill the pixel
-        pixels[p_index] = color.runtimeRGB.v1;
-        pixels[p_index + 1] = color.runtimeRGB.v2;
-        pixels[p_index + 2] = color.runtimeRGB.v3;
-        pixels[p_index + 3] = 255;
-        }
+    // Get the pixel color
+    Color3D color = pixel3D[b_index].color;
+
+    // Fill the pixel
+    pixels[p_index] = color.runtimeRGB.v1;
+    pixels[p_index + 1] = color.runtimeRGB.v2;
+    pixels[p_index + 2] = color.runtimeRGB.v3;
+    pixels[p_index + 3] = 255;
     }
 }
 

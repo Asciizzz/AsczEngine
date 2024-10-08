@@ -100,7 +100,3 @@ __host__ __device__ ColorVec Color3D::toRGB(ColorVec hsl) {
 
     return rgb;
 }
-
-__host__ __device__ ColorVec Color3D::x255(ColorVec vec) {
-    return ColorVec{vec.v1 * 255, vec.v2 * 255, vec.v3 * 255};
-}

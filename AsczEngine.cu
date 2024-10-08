@@ -21,12 +21,14 @@ int main() {
 
     // =================== EXPERIMENTATION =======================
 
-    // Initialize camera
+    // Initialize stuff
     CAM->pos = Vec3D(0, 0, 40);
     CAM->ang = Vec3D(0, -M_PI, 0);
 
+    RENDER->LIGHT.pos = Vec3D(0, 0, 50);
+
     std::vector<Tri3D> MODEL_OBJ = Tri3D::readObj(
-        "assets/Models/Sukuna.obj"
+        "assets/Models/Buddha.obj"
     );
 
     size_t tri_count = MODEL_OBJ.size();
@@ -145,30 +147,19 @@ int main() {
 
         // ================= Playground ====================
 
-        // // Rotate the light source
-        // RENDER->LIGHT.pos = Vec3D::rotate(
-        //     RENDER->LIGHT.pos, Vec3D(0, 0, 0),
-        //     // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-        //     Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
-        // );
+        // Rotate the light source
+        RENDER->LIGHT.pos = Vec3D::rotate(
+            RENDER->LIGHT.pos, Vec3D(0, 0, 0),
+            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+        );
 
-        // YOU are the light source
-        RENDER->LIGHT.pos = CAM->pos;
-        RENDER->LIGHT.normal = CAM->plane.normal;
+        // // YOU are the light source
+        // RENDER->LIGHT.pos = CAM->pos;
+        // RENDER->LIGHT.normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
         RENDER->renderGPU(tri_test, tri_count);
-
-        // == SFML Rendering that ACTUALLY support parallelism ==
-        /*
-        Idea: since you cant just execute draw function in parallel, you can
-        instead create a texture, fill it with pixels IN PARALLEL, and then
-        draw the texture to the window. This way, you can utilize the GPU
-        to fill the pixels, and the CPU to draw the texture.
-
-        Jesus Christ, if only SFML has a way to draw pixels in parallel
-        Oh wait isnt it related to OpenGL? I think it is...
-        */
 
         // Update the texture
         TEXTURE->updateTexture(RENDER);
