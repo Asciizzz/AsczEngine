@@ -50,7 +50,8 @@ public:
     int PIXEL_SIZE;
 
     // Default color
-    Color3D DEFAULT_COLOR = Color3D(25, 40, 90);
+    // Color3D DEFAULT_COLOR = Color3D(25, 40, 90);
+    Color3D DEFAULT_COLOR = Color3D(10, 10, 10);
 
     // Buffer
     int BUFFER_WIDTH;
@@ -87,8 +88,8 @@ __global__ void fillBufferKernel(
 
 // Kernel for converting 3D triangles to 2D triangles
 __global__ void tri3DsTo2DsKernel(
-    Tri2D *tri2Ds, const Tri3D *tri3Ds, Camera3D cam,
-    int p_s, size_t size
+    Tri2D *tri2Ds, const Tri3D *tri3Ds,
+    Camera3D cam, int p_s, size_t size
 );
 
 // Kernel for rasterizing 2D triangles
@@ -96,11 +97,7 @@ __global__ void rasterizeKernel(
     // Buffer and triangles
     Pixel3D *pixels, const Tri2D *tri2Ds, const Tri3D *tri3Ds,
     // Add other parameters here for future use
-    /* Idea:
-    - Light source
-    */
     LightSrc3D light,
-
     // Buffer size and data size
     int b_w, int b_h, size_t size
 );

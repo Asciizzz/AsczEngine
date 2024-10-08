@@ -4,14 +4,19 @@
 #include <thrust/sort.h>
 
 Render3D::Render3D(Camera3D *camera, int w_w, int w_h, int p_s) {
-    this->CAMERA = camera;
-
     // Window settings
     W_WIDTH = w_w;
     W_HEIGHT = w_h;
     W_CENTER_X = w_w / 2;
     W_CENTER_Y = w_h / 2;
     PIXEL_SIZE = p_s;
+
+    // Camera settings
+    CAMERA = camera;
+    CAMERA->w_width = w_w;
+    CAMERA->w_height = w_h;
+    CAMERA->w_center_x = W_CENTER_X;
+    CAMERA->w_center_y = W_CENTER_Y;
 
     // Initialize buffer
     BUFFER_WIDTH = w_w / p_s;
@@ -102,7 +107,8 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
 
     // Execute tri3DsTo2Ds kernel
     tri3DsTo2DsKernel<<<numBlocks, BLOCK_SIZE>>>(
-        D_TRI2DS, D_TRI3DS, *CAMERA, PIXEL_SIZE, size
+        D_TRI2DS, D_TRI3DS,
+        *CAMERA, PIXEL_SIZE, size
     );
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -174,7 +180,8 @@ __global__ void fillBufferKernel(
 }
 
 __global__ void tri3DsTo2DsKernel(
-    Tri2D *tri2Ds, const Tri3D *tri3Ds, Camera3D cam, int p_s, size_t size
+    Tri2D *tri2Ds, const Tri3D *tri3Ds,
+    Camera3D cam, int p_s, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < size) {
@@ -189,7 +196,6 @@ __global__ void tri3DsTo2DsKernel(
 
         // IMPORTANT: v1 -> v3 will have ascending zDepth
         // (note: we cannot use std::swap in device code)
-
         tri2Ds[i].v1 = v1;
         tri2Ds[i].v2 = v2;
         tri2Ds[i].v3 = v3;
@@ -207,10 +213,8 @@ __global__ void rasterizeKernel(
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < size) {
-        // If the largest Z is less than 0, then do nothing
-        if (tri2Ds[i].v3.zDepth < 0) return;
-
-        // If all 3 x or y are out of bounds, then do nothing
+        // If the triangle is not visible, skip
+        if (tri2Ds[i].v1.zDepth < 0 && tri2Ds[i].v2.zDepth < 0 && tri2Ds[i].v3.zDepth < 0) return;
         if (tri2Ds[i].v1.x < 0 && tri2Ds[i].v2.x < 0 && tri2Ds[i].v3.x < 0) return;
         if (tri2Ds[i].v1.y < 0 && tri2Ds[i].v2.y < 0 && tri2Ds[i].v3.y < 0) return;
         if (tri2Ds[i].v1.x >= b_w && tri2Ds[i].v2.x >= b_w && tri2Ds[i].v3.x >= b_w) return;

@@ -10,8 +10,6 @@ int main() {
     Camera3D *CAM = new Camera3D();
     Render3D *RENDER = new Render3D(CAM);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
-    CAM->w_center_x = RENDER->W_CENTER_X;
-    CAM->w_center_y = RENDER->W_CENTER_Y;
 
     // Debugging
     CsLogHandle *CSLOG = new CsLogHandle();
@@ -34,8 +32,9 @@ int main() {
         "assets/Models/Buddha.obj"
     );
 
+    // Tri count must be even
     size_t tri_count = MODEL_OBJ.size();
-    if (tri_count % 2 != 0) tri_count++; // Tri count must be even
+    tri_count += tri_count % 2;
     Tri3D *tri_test = new Tri3D[tri_count];
 
     for (int i = 0; i < tri_count; i++) {

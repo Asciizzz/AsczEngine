@@ -9,6 +9,7 @@ public:
 
     // For later usage
     int w_center_x, w_center_y;
+    int w_width, w_height;
 
     bool focus = true;
 

@@ -75,6 +75,7 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "__availability": "cpp"
     }
 }
