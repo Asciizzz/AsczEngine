@@ -50,7 +50,7 @@ public:
     int PIXEL_SIZE;
 
     // Default color
-    Color3D DEFAULT_COLOR = Color3D(10, 10, 10);
+    Color3D DEFAULT_COLOR = Color3D(25, 40, 90);
 
     // Buffer
     int BUFFER_WIDTH;

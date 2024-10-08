@@ -35,6 +35,7 @@ int main() {
     );
 
     size_t tri_count = MODEL_OBJ.size();
+    if (tri_count % 2 != 0) tri_count++; // Tri count must be even
     Tri3D *tri_test = new Tri3D[tri_count];
 
     for (int i = 0; i < tri_count; i++) {
@@ -43,6 +44,15 @@ int main() {
         MODEL_OBJ[i].v3 = Vec3D::scale(MODEL_OBJ[i].v3, Vec3D(), 20);
 
         tri_test[i] = MODEL_OBJ[i];
+    }
+
+    Tri3D **tri_thread = new Tri3D*[2];
+    tri_thread[0] = new Tri3D[tri_count / 2];
+    tri_thread[1] = new Tri3D[tri_count / 2];
+
+    for (int i = 0; i < tri_count / 2; i++) {
+        tri_thread[0][i] = tri_test[i];
+        tri_thread[1][i] = tri_test[i + tri_count / 2];
     }
 
     // Unrelated stuff
@@ -162,7 +172,8 @@ int main() {
         // RENDER->light.normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
-        RENDER->renderGPU(tri_test, tri_count);
+        RENDER->renderGPU(tri_thread[0], tri_count / 2);
+        RENDER->renderGPU(tri_thread[1], tri_count / 2);
 
         // == SFML Rendering that ACTUALLY support parallelism ==
         /*
