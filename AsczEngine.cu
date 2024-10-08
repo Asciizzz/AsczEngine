@@ -25,35 +25,19 @@ int main() {
     CAM->pos = Vec3D(0, 0, 40);
     CAM->ang = Vec3D(0, -M_PI, 0);
 
-    // Initialize light source
-    RENDER->LIGHT.pos = Vec3D(0, 0, 40);
-
     std::vector<Tri3D> MODEL_OBJ = Tri3D::readObj(
-        "assets/Models/Buddha.obj"
+        "assets/Models/Sukuna.obj"
     );
 
-    // Tri count must be even
     size_t tri_count = MODEL_OBJ.size();
-    tri_count += tri_count % 2;
     Tri3D *tri_test = new Tri3D[tri_count];
 
     for (int i = 0; i < tri_count; i++) {
-        MODEL_OBJ[i].v1 = Vec3D::scale(MODEL_OBJ[i].v1, Vec3D(), 20);
-        MODEL_OBJ[i].v2 = Vec3D::scale(MODEL_OBJ[i].v2, Vec3D(), 20);
-        MODEL_OBJ[i].v3 = Vec3D::scale(MODEL_OBJ[i].v3, Vec3D(), 20);
+        MODEL_OBJ[i].v1 = Vec3D::scale(MODEL_OBJ[i].v1, Vec3D(), 10);
+        MODEL_OBJ[i].v2 = Vec3D::scale(MODEL_OBJ[i].v2, Vec3D(), 10);
+        MODEL_OBJ[i].v3 = Vec3D::scale(MODEL_OBJ[i].v3, Vec3D(), 10);
 
         tri_test[i] = MODEL_OBJ[i];
-    }
-
-    // SPLITS THE TRIANGLES INTO TWO THREADS
-
-    Tri3D **tri_thread = new Tri3D*[2];
-    tri_thread[0] = new Tri3D[tri_count / 2];
-    tri_thread[1] = new Tri3D[tri_count / 2];
-
-    for (int i = 0; i < tri_count / 2; i++) {
-        tri_thread[0][i] = tri_test[i];
-        tri_thread[1][i] = tri_test[i + tri_count / 2];
     }
 
     // Unrelated stuff
@@ -161,20 +145,19 @@ int main() {
 
         // ================= Playground ====================
 
-        // Rotate the light source
-        RENDER->LIGHT.pos = Vec3D::rotate(
-            RENDER->LIGHT.pos, Vec3D(0, 0, 0),
-            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
-        );
+        // // Rotate the light source
+        // RENDER->LIGHT.pos = Vec3D::rotate(
+        //     RENDER->LIGHT.pos, Vec3D(0, 0, 0),
+        //     // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+        //     Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+        // );
 
-        // // YOU are the light source
-        // RENDER->light.pos = CAM->pos;
-        // RENDER->light.normal = CAM->plane.normal;
+        // YOU are the light source
+        RENDER->LIGHT.pos = CAM->pos;
+        RENDER->LIGHT.normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
-        RENDER->renderGPU(tri_thread[0], tri_count / 2);
-        RENDER->renderGPU(tri_thread[1], tri_count / 2);
+        RENDER->renderGPU(tri_test, tri_count);
 
         // == SFML Rendering that ACTUALLY support parallelism ==
         /*

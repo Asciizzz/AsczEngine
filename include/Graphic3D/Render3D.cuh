@@ -58,9 +58,11 @@ public:
     int BUFFER_HEIGHT;
     int BUFFER_SIZE;
     Pixel3D *BUFFER;
+    double *DEPTH; // VERY IMPORTANT TO AVOID RACE CONDITIONS
 
     // CUDA stuffs
-    Pixel3D *D_BUFFER; 
+    Pixel3D *D_BUFFER;
+    double *D_DEPTH; 
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
     const size_t BLOCK_SIZE = 256;

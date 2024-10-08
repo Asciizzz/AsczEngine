@@ -12,10 +12,11 @@ class Vec3D;
 
 class Vec2D {
 public:
-    double x, y, zDepth;
+    double x, y;
+    float zDepth;
 
     // Constructor
-    __host__ __device__ Vec2D(double x=0, double y=0, double zDepth=1000) {
+    __host__ __device__ Vec2D(double x=0, double y=0, float zDepth=1000) {
         this->x = x;
         this->y = y;
         this->zDepth = zDepth;

@@ -107,8 +107,7 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
 
     // Execute tri3DsTo2Ds kernel
     tri3DsTo2DsKernel<<<numBlocks, BLOCK_SIZE>>>(
-        D_TRI2DS, D_TRI3DS,
-        *CAMERA, PIXEL_SIZE, size
+        D_TRI2DS, D_TRI3DS, *CAMERA, PIXEL_SIZE, size
     );
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -154,24 +153,6 @@ void Render3D::renderCPU(std::vector<Tri3D> tri3Ds) {
     // Decrapitated
 }
 
-// HOLY SHIT THIS REDUCES THE RACE CONDITION BY ALOT
-/* Explaination:
-
-Parallelize rasterization on a singular buffer can 
-*/
-__device__ inline bool atomicMinDouble(double *address, double val) {
-    unsigned long long int *address_as_ull = (unsigned long long int *) address;
-    unsigned long long int old = *address_as_ull, assumed;
-
-    do {
-        assumed = old;
-        if (__longlong_as_double(assumed) <= val) break;
-        old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val));
-    } while (assumed != old);
-
-    return __longlong_as_double(old) > val;
-}
-
 __global__ void fillBufferKernel(
     Pixel3D *buffer, Color3D color, size_t size
 ) {
@@ -200,6 +181,18 @@ __global__ void tri3DsTo2DsKernel(
         tri2Ds[i].v2 = v2;
         tri2Ds[i].v3 = v3;
     }
+}
+
+__device__ bool atomicMinFloat(float* addr, float value) {
+    int* addr_as_int = (int*)addr;
+    int old = *addr_as_int, assumed;
+
+    do {
+        assumed = old;
+        old = atomicCAS(addr_as_int, assumed, __float_as_int(fminf(value, __int_as_float(assumed))));
+    } while (assumed != old);
+
+    return __int_as_float(old) > value;
 }
 
 __global__ void rasterizeKernel(
@@ -254,8 +247,8 @@ __global__ void rasterizeKernel(
             );
 
             // Check if the pixel is closer than the current pixel
-            if (!atomicMinDouble(&pixels[index].screen.zDepth, screen.zDepth)) continue;
-            // if (pixels[index].screen.zDepth < p.zDepth) continue;
+            if (!atomicMinFloat(&pixels[index].screen.zDepth, screen.zDepth))
+                continue;
 
             // Get world position
             double px = Vec2D::barycentricCalc(
