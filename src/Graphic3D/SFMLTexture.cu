@@ -62,7 +62,7 @@ __global__ void fillPixelKernel(
             pixels[p_index] = color.runtimeRGB.v1;
             pixels[p_index + 1] = color.runtimeRGB.v2;
             pixels[p_index + 2] = color.runtimeRGB.v3;
-            pixels[p_index + 3] = 255;
+            pixels[p_index + 3] = color.alpha * 255;
         }
     }
 }

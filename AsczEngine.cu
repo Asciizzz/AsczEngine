@@ -45,6 +45,8 @@ int main() {
         tri_test[i] = MODEL_OBJ[i];
     }
 
+    // SPLITS THE TRIANGLES INTO TWO THREADS
+
     Tri3D **tri_thread = new Tri3D*[2];
     tri_thread[0] = new Tri3D[tri_count / 2];
     tri_thread[1] = new Tri3D[tri_count / 2];
