@@ -22,7 +22,7 @@ int main() {
     // =================== EXPERIMENTATION =======================
 
     // Initialize stuff
-    CAM->pos = Vec3D(0, 0, 40);
+    CAM->pos = Vec3D(0, 100, 0);
     CAM->ang = Vec3D(0, -M_PI, 0);
 
     RENDER->LIGHT.pos = Vec3D(0, 200, 0);
