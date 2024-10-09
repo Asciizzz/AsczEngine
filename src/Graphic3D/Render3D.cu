@@ -208,19 +208,19 @@ __global__ void rasterizeKernel(
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size) return;
 
-    // If the triangle is not visible, skip
-    if (tri2Ds[i].v1.zDepth < 0 || tri2Ds[i].v2.zDepth < 0 || tri2Ds[i].v3.zDepth < 0) return;
-    if (tri2Ds[i].v1.x < 0 || tri2Ds[i].v2.x < 0 || tri2Ds[i].v3.x < 0) return;
-    if (tri2Ds[i].v1.y < 0 || tri2Ds[i].v2.y < 0 || tri2Ds[i].v3.y < 0) return;
-    if (tri2Ds[i].v1.x >= b_w || tri2Ds[i].v2.x >= b_w || tri2Ds[i].v3.x >= b_w) return;
-    if (tri2Ds[i].v1.y >= b_h || tri2Ds[i].v2.y >= b_h || tri2Ds[i].v3.y >= b_h) return;
+    // // If the triangle is not visible, skip
+    // if (tri2Ds[i].v1.zDepth < 0 || tri2Ds[i].v2.zDepth < 0 || tri2Ds[i].v3.zDepth < 0) return;
+    // if (tri2Ds[i].v1.x < 0 || tri2Ds[i].v2.x < 0 || tri2Ds[i].v3.x < 0) return;
+    // if (tri2Ds[i].v1.y < 0 || tri2Ds[i].v2.y < 0 || tri2Ds[i].v3.y < 0) return;
+    // if (tri2Ds[i].v1.x >= b_w || tri2Ds[i].v2.x >= b_w || tri2Ds[i].v3.x >= b_w) return;
+    // if (tri2Ds[i].v1.y >= b_h || tri2Ds[i].v2.y >= b_h || tri2Ds[i].v3.y >= b_h) return;
 
     // The correct one
-    // if (tri2Ds[i].v1.zDepth < 0 && tri2Ds[i].v2.zDepth < 0 && tri2Ds[i].v3.zDepth < 0) return;
-    // if (tri2Ds[i].v1.x < 0 && tri2Ds[i].v2.x < 0 && tri2Ds[i].v3.x < 0) return;
-    // if (tri2Ds[i].v1.y < 0 && tri2Ds[i].v2.y < 0 && tri2Ds[i].v3.y < 0) return;
-    // if (tri2Ds[i].v1.x >= b_w && tri2Ds[i].v2.x >= b_w && tri2Ds[i].v3.x >= b_w) return;
-    // if (tri2Ds[i].v1.y >= b_h && tri2Ds[i].v2.y >= b_h && tri2Ds[i].v3.y >= b_h) return;
+    if (tri2Ds[i].v1.zDepth < 0 && tri2Ds[i].v2.zDepth < 0 && tri2Ds[i].v3.zDepth < 0) return;
+    if (tri2Ds[i].v1.x < 0 && tri2Ds[i].v2.x < 0 && tri2Ds[i].v3.x < 0) return;
+    if (tri2Ds[i].v1.y < 0 && tri2Ds[i].v2.y < 0 && tri2Ds[i].v3.y < 0) return;
+    if (tri2Ds[i].v1.x >= b_w && tri2Ds[i].v2.x >= b_w && tri2Ds[i].v3.x >= b_w) return;
+    if (tri2Ds[i].v1.y >= b_h && tri2Ds[i].v2.y >= b_h && tri2Ds[i].v3.y >= b_h) return;
 
     // Find the bounding box of the 2D polygon
     int minX = min(tri2Ds[i].v1.x, min(tri2Ds[i].v2.x, tri2Ds[i].v3.x));

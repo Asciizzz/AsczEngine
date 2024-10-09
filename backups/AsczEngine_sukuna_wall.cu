@@ -24,64 +24,121 @@ int main() {
     // =================== EXPERIMENTATION =======================
 
     // Initialize stuff
-    CAM->pos = Vec3D(0, 0, -60);
+    CAM->pos = Vec3D(0, 0, -50);
     CAM->ang = Vec3D(0, M_PI, 0);
 
-    RENDER->LIGHT.pos = Vec3D(0, 20, 60);
+    RENDER->LIGHT.pos = Vec3D(0, 0, 12);
 
     std::vector<Tri3D> TRI_VEC;
 
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
         "assets/Models/Sukuna.obj"
     );
+    std::vector<Tri3D> MODEL_2 = Tri3D::readObj(
+        "assets/Models/Sukuna.obj"
+    );
+    std::vector<Tri3D> MODEL_3 = Tri3D::readObj(
+        "assets/Models/Sukuna.obj"
+    );
+    std::vector<Tri3D> MODEL_4 = Tri3D::readObj(
+        "assets/Models/Sukuna.obj"
+    );
+
     for (int i = 0; i < MODEL_1.size(); i++) {
-        MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
         TRI_VEC.push_back(MODEL_1[i]);
     }
+    // for (int i = 0; i < MODEL_2.size(); i++) {
+    //     TRI_VEC.push_back(MODEL_2[i]);
+    // }
+    // for (int i = 0; i < MODEL_3.size(); i++) {
+    //     TRI_VEC.push_back(MODEL_3[i]);
+    // }
+    // for (int i = 0; i < MODEL_4.size(); i++) {
+    //     TRI_VEC.push_back(MODEL_4[i]);
+    // }
 
-    // Function y = f(x, z) to create a 3D graph
-    std::vector<std::vector<Vec3D>> points;
-    for (double x = -10; x < 10; x += 0.1) {
-        points.push_back(std::vector<Vec3D>());
-        for (double z = -10; z < 10; z += 0.1) {
-            double y = sin(x) * cos(z) - 2;
+    // // Create a cube
+    // double size = 1.5;
 
-            points.back().push_back(Vec3D(x, y, z));
-        }
-    }
+    // // Positive X face
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, size), Vec3D(size, -size, size), Vec3D(size, -size, -size),
+    //     Vec3D(-1, 0, 0), Color3D(255, 255, 255)
+    // ));
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, size), Vec3D(size, -size, -size), Vec3D(size, size, -size),
+    //     Vec3D(-1, 0, 0), Color3D(255, 255, 255)
+    // ));
+    // // Negative X face
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(-size, size, size), Vec3D(-size, -size, size), Vec3D(-size, -size, -size),
+    //     Vec3D(1, 0, 0), Color3D(255, 255, 255)
+    // ));
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(-size, size, size), Vec3D(-size, -size, -size), Vec3D(-size, size, -size),
+    //     Vec3D(1, 0, 0), Color3D(255, 255, 255)
+    // ));
 
-    for (size_t x = 0; x < points.size() - 1; x++) {
-        for (size_t z = 0; z < points[x].size() - 1; z++) {
-            double cx = 50 + 150 * double(x) / points.size();
-            double cz = 50 + 150 * double(z) / points[x].size();
-            double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
-            Color3D color = Color3D(cx, cz, csqrt);
+    // // Positive Y face
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, size), Vec3D(-size, size, size), Vec3D(-size, size, -size),
+    //     Vec3D(0, -1, 0), Color3D(255, 255, 255)
+    // ));
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, size), Vec3D(-size, size, -size), Vec3D(size, size, -size),
+    //     Vec3D(0, -1, 0), Color3D(255, 255, 255)
+    // ));
+    // // Negative Y face
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, -size, size), Vec3D(-size, -size, size), Vec3D(-size, -size, -size),
+    //     Vec3D(0, 1, 0), Color3D(255, 255, 255)
+    // ));
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, -size, size), Vec3D(-size, -size, -size), Vec3D(size, -size, -size),
+    //     Vec3D(0, 1, 0), Color3D(255, 255, 255)
+    // ));
 
-            Tri3D tri1 = Tri3D(
-                points[x][z], points[x + 1][z], points[x][z + 1],
-                color
-            );
-            Tri3D tri2 = Tri3D(
-                points[x][z + 1], points[x + 1][z], points[x + 1][z + 1],
-                color
-            );
-
-            tri1.scale(Vec3D(), Vec3D(20, 20, 20));
-            tri2.scale(Vec3D(), Vec3D(20, 20, 20));
-
-            if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
-            if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
-
-            TRI_VEC.push_back(tri1);
-            TRI_VEC.push_back(tri2);
-        }
-    }
+    // // Positive Z face
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, size), Vec3D(-size, size, size), Vec3D(-size, -size, size),
+    //     Vec3D(0, 0, -1), Color3D(255, 255, 255)
+    // ));
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, size), Vec3D(-size, -size, size), Vec3D(size, -size, size),
+    //     Vec3D(0, 0, -1), Color3D(255, 255, 255)
+    // ));
+    // // Negative Z face
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, -size), Vec3D(-size, size, -size), Vec3D(-size, -size, -size),
+    //     Vec3D(0, 0, 1)
+    // ));
+    // TRI_VEC.push_back(Tri3D(
+    //     Vec3D(size, size, -size), Vec3D(-size, -size, -size), Vec3D(size, -size, -size),
+    //     Vec3D(0, 0, 1)
+    // ));
 
     size_t tri_count = TRI_VEC.size();
+    tri_count += tri_count % 2;
+    size_t tri_chunk = tri_count / 2;
     Tri3D *tri_test = new Tri3D[tri_count];
+    Tri3D *tri_part1 = new Tri3D[tri_chunk];
+    Tri3D *tri_part2 = new Tri3D[tri_chunk];
 
     for (int i = 0; i < tri_count; i++) {
+        TRI_VEC[i].v1 = Vec3D::scale(TRI_VEC[i].v1, Vec3D(), 10);
+        TRI_VEC[i].v2 = Vec3D::scale(TRI_VEC[i].v2, Vec3D(), 10);
+        TRI_VEC[i].v3 = Vec3D::scale(TRI_VEC[i].v3, Vec3D(), 10);
+
+        // int rgb = i % 2 == 0 ? 255 : 20;
+        // TRI_VEC[i].color = Color3D(rgb, rgb, rgb);
+        // TRI_VEC[i].lighting = false;
+
         tri_test[i] = TRI_VEC[i];
+    }
+
+    for (int i = 0; i < tri_chunk; i++) {
+        tri_part1[i] = tri_test[i];
+        tri_part2[i] = tri_test[i + tri_chunk];
     }
 
     // Unrelated stuff
@@ -199,6 +256,8 @@ int main() {
         // RENDER->LIGHT.normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
+        // RENDER->renderGPU(tri_part1, tri_chunk);
+        // RENDER->renderGPU(tri_part2, tri_chunk);
         RENDER->renderGPU(tri_test, tri_count);
 
         TEXTURE->updateTexture(RENDER);
