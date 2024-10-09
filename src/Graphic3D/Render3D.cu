@@ -106,6 +106,12 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
     CUDA_CHECK(cudaMemcpy(D_TRI3DS, tri3Ds, size * sizeof(Tri3D), cudaMemcpyHostToDevice));
     CUDA_CHECK(cudaMemcpy(D_BUFFER, BUFFER, BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyHostToDevice));
 
+    // Execute visisbleTriangles kernel
+    visisbleTrianglesKernel<<<numBlocks, BLOCK_SIZE>>>(
+        D_TRI3DS, *CAMERA, size
+    );
+    CUDA_CHECK(cudaDeviceSynchronize());
+
     // Execute tri3DsTo2Ds kernel
     tri3DsTo2DsKernel<<<numBlocks, BLOCK_SIZE>>>(
         D_TRI2DS, D_TRI3DS, *CAMERA, PIXEL_SIZE, size
@@ -162,12 +168,39 @@ __global__ void fillBufferKernel(
     if (i < size && !buffer[i].active) buffer[i].color = color;
 }
 
+__global__ void visisbleTrianglesKernel(
+    Tri3D *tri3Ds, Camera3D cam, size_t size
+) {
+    size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= size) return;
+
+    Vec3D camNormal = cam.plane.normal;
+
+    // Find the point closest to the camera plane
+    double dist1 = cam.plane.distance(tri3Ds[i].v1);
+    double dist2 = cam.plane.distance(tri3Ds[i].v2);
+    double dist3 = cam.plane.distance(tri3Ds[i].v3);
+    double minDist = min(dist1, min(dist2, dist3));
+
+    Vec3D minPoint;
+
+    if (minDist == dist1) minPoint = tri3Ds[i].v1;
+    else if (minDist == dist2) minPoint = tri3Ds[i].v2;
+    else minPoint = tri3Ds[i].v3;
+
+    // Create a vector connecting the min point to the camera
+    Vec3D camDir = Vec3D::sub(cam.pos, minPoint);
+
+    // If the angle of the vector is greater than 90 degrees, the triangle is not visible
+    tri3Ds[i].visible = Vec3D::dot(camNormal, camDir) < 0;
+}
+
 __global__ void tri3DsTo2DsKernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds,
     Camera3D cam, int p_s, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= size) return;
+    if (i >= size || !tri3Ds[i].visible) return;
 
     Vec2D v1 = Render3D::toVec2D(cam, tri3Ds[i].v1);
     Vec2D v2 = Render3D::toVec2D(cam, tri3Ds[i].v2);
@@ -206,7 +239,7 @@ __global__ void rasterizeKernel(
     int b_w, int b_h, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= size) return;
+    if (i >= size || !tri3Ds[i].visible) return;
 
     // // If the triangle is not visible, skip
     // if (tri2Ds[i].v1.zDepth < 0 || tri2Ds[i].v2.zDepth < 0 || tri2Ds[i].v3.zDepth < 0) return;
@@ -285,8 +318,9 @@ __global__ void rasterizeKernel(
         double cosA = Vec3D::dot(tri3Ds[i].normal, lightDir) /
             (Vec3D::mag(tri3Ds[i].normal) * Vec3D::mag(lightDir));
         // Note: we cannot use std::max and std::min in device code
-        if (cosA < 0) cosA = 0;
-        // if (cosA < 0) cosA = -cosA;
+        // if (cosA < 0) cosA = 0;
+
+        if (cosA < 0) cosA = tri3Ds[i].isTwoSided ? -cosA : 0;
 
         double ratio = light.ambient + cosA * (light.specular - light.ambient);
 

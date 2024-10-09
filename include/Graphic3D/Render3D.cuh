@@ -99,6 +99,11 @@ __global__ void fillBufferKernel(
     Pixel3D *buffer, Color3D color, size_t size
 );
 
+// Kernel for checking if triangles are visible
+__global__ void visisbleTrianglesKernel(
+    Tri3D *tri3Ds, Camera3D cam, size_t size
+);
+
 // Kernel for converting 3D triangles to 2D triangles
 __global__ void tri3DsTo2DsKernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds,

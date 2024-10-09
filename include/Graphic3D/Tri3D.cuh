@@ -30,6 +30,7 @@ struct Tri2D {
 
 class Tri3D {
 public:
+    bool visible = true;
     Vec3D v1, v2, v3;
     Color3D color;
     Vec3D normal;

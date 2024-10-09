@@ -32,10 +32,12 @@ int main() {
     std::vector<Tri3D> TRI_VEC;
 
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/Sukuna.obj"
+        "assets/Models/malevolent_shrine.obj"
     );
     for (int i = 0; i < MODEL_1.size(); i++) {
         MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
+        MODEL_1[i].color = Color3D(232, 211, 139);
+        MODEL_1[i].isTwoSided = true;
         TRI_VEC.push_back(MODEL_1[i]);
     }
 
@@ -55,7 +57,7 @@ int main() {
             double cx = 50 + 150 * double(x) / points.size();
             double cz = 50 + 150 * double(z) / points[x].size();
             double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
-            Color3D color = Color3D(cx, cz, csqrt);
+            Color3D color = Color3D(232, 211, 139 + 20 * double(x) / points.size());
 
             Tri3D tri1 = Tri3D(
                 points[x][z], points[x + 1][z], points[x][z + 1],
