@@ -31,15 +31,15 @@ int main() {
 
     std::vector<Tri3D> TRI_VEC;
 
-    std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/malevolent_shrine.obj"
-    );
-    for (int i = 0; i < MODEL_1.size(); i++) {
-        MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
-        MODEL_1[i].color = Color3D(232, 211, 139);
-        MODEL_1[i].isTwoSided = true;
-        TRI_VEC.push_back(MODEL_1[i]);
-    }
+    // std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
+    //     "assets/Models/malevolent_shrine.obj"
+    // );
+    // for (int i = 0; i < MODEL_1.size(); i++) {
+    //     MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
+    //     MODEL_1[i].color = Color3D(232, 211, 139);
+    //     MODEL_1[i].isTwoSided = true;
+    //     TRI_VEC.push_back(MODEL_1[i]);
+    // }
 
     // Function y = f(x, z) to create a 3D graph
     std::vector<std::vector<Vec3D>> points;

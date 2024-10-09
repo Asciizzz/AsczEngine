@@ -1,9 +1,5 @@
 #include <Render3D.cuh>
 
-#include <thrust/device_vector.h>
-#include <thrust/sort.h>
-#include <omp.h>
-
 Render3D::Render3D(Camera3D *camera, int w_w, int w_h, int p_s) {
     // Window settings
     W_WIDTH = w_w;
@@ -117,19 +113,6 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
         D_TRI2DS, D_TRI3DS, *CAMERA, PIXEL_SIZE, size
     );
     CUDA_CHECK(cudaDeviceSynchronize());
-
-    // Sort the 2D triangles by zDepth (and rearrange the 3D triangles accordingly)
-    thrust::device_vector<Tri2D> dev_tri2Ds(D_TRI2DS, D_TRI2DS + size);
-    thrust::device_vector<Tri3D> dev_tri3Ds(D_TRI3DS, D_TRI3DS + size);
-    // Sort using the thrust, while also rearranging the tri3Ds
-    thrust::sort_by_key(dev_tri2Ds.begin(), dev_tri2Ds.end(), dev_tri3Ds.begin(),
-        [] __device__ (const Tri2D& a, const Tri2D& b) -> bool {
-            return a.v1.zDepth > b.v1.zDepth;
-        }
-    );
-    // Copy back to device memory
-    thrust::copy(dev_tri2Ds.begin(), dev_tri2Ds.end(), D_TRI2DS);
-    thrust::copy(dev_tri3Ds.begin(), dev_tri3Ds.end(), D_TRI3DS);
 
     // Execute rasterization kernel
     for (int i = 0; i < 2; i++)
