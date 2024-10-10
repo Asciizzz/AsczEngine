@@ -34,12 +34,14 @@ int main() {
     CAM->ang = Vec3D(0, 0, 0);
 
     RENDER->DEFAULT_COLOR = Color3D(0, 0, 0);
-    // RENDER->LIGHT.pos = Vec3D(75, 140, 75);
 
+    LIGHT->pos = Vec3D(75, 140, 75);
+
+    // Triangle Vector 
     std::vector<Tri3D> TRI_VEC;
 
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/Ak47.obj"
+        "assets/Models/Sukuna.obj"
     );
     for (int i = 0; i < MODEL_1.size(); i++) {
         MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
@@ -49,30 +51,31 @@ int main() {
     }
 
     // Function y = f(x, z) to create a 3D graph
-    std::vector<std::vector<Vec3D>> points;
+    std::vector<std::vector<Vec3D>> GRAPH_POINTS;
+    std::vector<Tri3D> GRAPH_TRIS;
     for (double x = -10; x < 10; x += 0.1) {
-        points.push_back(std::vector<Vec3D>());
+        GRAPH_POINTS.push_back(std::vector<Vec3D>());
         for (double z = -10; z < 10; z += 0.1) {
-            double y = 0;
+            double y = -10;
 
-            points.back().push_back(Vec3D(x, y, z));
+            GRAPH_POINTS.back().push_back(Vec3D(x, y, z));
         }
     }
 
-    for (size_t x = 0; x < points.size() - 1; x++) {
-        for (size_t z = 0; z < points[x].size() - 1; z++) {
-            double cx = 50 + 150 * double(x) / points.size();
-            double cz = 50 + 150 * double(z) / points[x].size();
+    for (size_t x = 0; x < GRAPH_POINTS.size() - 1; x++) {
+        for (size_t z = 0; z < GRAPH_POINTS[x].size() - 1; z++) {
+            double cx = 50 + 150 * double(x) / GRAPH_POINTS.size();
+            double cz = 50 + 150 * double(z) / GRAPH_POINTS[x].size();
             double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
-            Color3D color = Color3D(232, 211, 139 + 20 * double(x) / points.size());
+            Color3D color = Color3D(232, 211, 139 + 20 * double(x) / GRAPH_POINTS.size());
             color = Color3D(255, 255, 255);
 
             Tri3D tri1 = Tri3D(
-                points[x][z], points[x + 1][z], points[x][z + 1],
+                GRAPH_POINTS[x][z], GRAPH_POINTS[x + 1][z], GRAPH_POINTS[x][z + 1],
                 color
             );
             Tri3D tri2 = Tri3D(
-                points[x][z + 1], points[x + 1][z], points[x + 1][z + 1],
+                GRAPH_POINTS[x][z + 1], GRAPH_POINTS[x + 1][z], GRAPH_POINTS[x + 1][z + 1],
                 color
             );
 
@@ -82,9 +85,29 @@ int main() {
             if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
             if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
 
-            TRI_VEC.push_back(tri1);
-            TRI_VEC.push_back(tri2);
+            GRAPH_TRIS.push_back(tri1);
+            GRAPH_TRIS.push_back(tri2);
         }
+    }
+
+    for (Tri3D &tri : GRAPH_TRIS) {
+        // Floor
+        TRI_VEC.push_back(tri);
+        // Back wall
+        tri.rotate(Vec3D(), Vec3D(-M_PI_2, 0, 0));
+        TRI_VEC.push_back(tri);
+        // Left Wall
+        tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
+        TRI_VEC.push_back(tri);
+        // Front Wall
+        tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
+        TRI_VEC.push_back(tri);
+        // Right Wall
+        tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
+        TRI_VEC.push_back(tri);
+        // Ceiling
+        tri.rotate(Vec3D(), Vec3D(0, 0, -M_PI_2));
+        TRI_VEC.push_back(tri);
     }
 
     size_t tri_count = TRI_VEC.size();
@@ -205,16 +228,16 @@ int main() {
 
         // ================= Playground ====================
 
-        // // Rotate the light source
-        // RENDER->LIGHT.pos = Vec3D::rotate(
-        //     RENDER->LIGHT.pos, Vec3D(0, 0, 0),
-        //     // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-        //     Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
-        // );
+        // Rotate the light source
+        LIGHT->pos = Vec3D::rotate(
+            LIGHT->pos, Vec3D(0, 0, 0),
+            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+        );
 
         // // YOU are the light source
-        // RENDER->LIGHT.pos = CAM->pos;
-        // RENDER->LIGHT.normal = CAM->plane.normal;
+        // LIGHT->pos = CAM->pos;
+        // LIGHT->normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
         RENDER->renderGPU(tri_test, tri_count);
