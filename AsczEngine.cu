@@ -82,15 +82,15 @@ int main() {
         tri.scale(Vec3D(), Vec3D(20, 20, 20));
         // Floor (-y)
         TRI_VEC.push_back(tri);
-        // -z wall
+        // +z wall
         tri.rotate(Vec3D(), Vec3D(-M_PI_2, 0, 0));
         TRI_VEC.push_back(tri);
         // +x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
         TRI_VEC.push_back(tri);
-        // +z Wall
+        // -z Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
-        TRI_VEC.push_back(tri);
+        // TRI_VEC.push_back(tri);
         // -x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
         TRI_VEC.push_back(tri);
@@ -116,10 +116,45 @@ int main() {
     Tri3D *tri_test = new Tri3D[tri_count];
     RENDER->mallocTris(tri_count);
 
-    for (int i = 0; i < tri_count; i++)
-        tri_test[i] = TRI_VEC[i];
+    double maxX = -INFINITY;
+    double maxY = -INFINITY;
+    double maxZ = -INFINITY;
+    double minX = INFINITY;
+    double minY = INFINITY;
+    double minZ = INFINITY;
+    for (int i = 0; i < tri_count; i++) {
+        double minVx = std::min(
+            std::min(TRI_VEC[i].v1.x, TRI_VEC[i].v2.x), TRI_VEC[i].v3.x
+        );
+        double maxVx = std::max(
+            std::max(TRI_VEC[i].v1.x, TRI_VEC[i].v2.x), TRI_VEC[i].v3.x
+        );
+        double minVy = std::min(
+            std::min(TRI_VEC[i].v1.y, TRI_VEC[i].v2.y), TRI_VEC[i].v3.y
+        );
+        double maxVy = std::max(
+            std::max(TRI_VEC[i].v1.y, TRI_VEC[i].v2.y), TRI_VEC[i].v3.y
+        );
+        double minVz = std::min(
+            std::min(TRI_VEC[i].v1.z, TRI_VEC[i].v2.z), TRI_VEC[i].v3.z
+        );
+        double maxVz = std::max(
+            std::max(TRI_VEC[i].v1.z, TRI_VEC[i].v2.z), TRI_VEC[i].v3.z
+        );
 
-    Tri3D *GRAPH = tri_test;
+        maxX = std::max(maxX, maxVx);
+        maxY = std::max(maxY, maxVy);
+        maxZ = std::max(maxZ, maxVz);
+        minX = std::min(minX, minVx);
+        minY = std::min(minY, minVy);
+        minZ = std::min(minZ, minVz);
+
+        tri_test[i] = TRI_VEC[i];
+    }
+
+    LIGHT->initShadowMap(maxX - minX, maxY - minY);
+
+    // Tri3D *GRAPH = tri_test;
 
     // Unrelated stuff
     double rainbowR = 255;
@@ -244,7 +279,8 @@ int main() {
         // LIGHT->normal = CAM->plane.normal;
 
         // ======= Main graphic rendering pipeline =======
-        RENDER->renderGPU(tri_test, tri_count);
+        RENDER->memcpyTris(tri_test);
+        RENDER->executePipeline();
 
         LIGHT->demo(RENDER);
 

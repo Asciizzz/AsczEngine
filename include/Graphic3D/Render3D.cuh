@@ -43,19 +43,24 @@ public:
     Pixel3D *BUFFER = new Pixel3D[0];
     Pixel3D *D_BUFFER; // Device buffer for kernel
     void setBuffer(int w, int h, int p_s);
-    void bufferMemcpy();
+    void memcpyBuffer();
 
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
+    size_t TRI_SIZE;
     void mallocTris(size_t size);
+    void memcpyTris(Tri3D *tri3Ds);
     void freeTris();
     void resizeTris(size_t size); // Should only be called if really necessary
 
-    __host__ __device__ static Vec2D toCameraPerspective(const Camera3D &cam, Vec3D v);
-
-    // The main render function
-    void renderGPU(Tri3D *tri3Ds, size_t size);
-    void renderCPU(std::vector<Tri3D> tri3Ds); // Not recommended
+    __host__ __device__ static Vec2D totoTriangle2Ds(const Camera3D &cam, Vec3D v);
+    
+    // The pipeline
+    void executePipeline();
+    void resetBuffer();
+    void visibleTriangles();
+    void toTriangle2Ds();
+    void rasterize();
 };
 
 // Kernel for resetting the buffer
@@ -69,7 +74,7 @@ __global__ void visisbleTrianglesKernel(
 );
 
 // Kernel for converting 3D triangles to 2D triangles
-__global__ void transform2Dkernel(
+__global__ void toTriangle2Dskernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds,
     Camera3D cam, int p_s, size_t size
 );
