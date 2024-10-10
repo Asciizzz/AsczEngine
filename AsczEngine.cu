@@ -35,7 +35,7 @@ int main() {
 
     RENDER->DEFAULT_COLOR = Color3D(0, 0, 0);
 
-    LIGHT->pos = Vec3D(0, 0, 50);
+    LIGHT->pos = Vec3D(0, 0, 200);
 
     // Triangle Vector 
     std::vector<Tri3D> TRI_VEC;
@@ -79,8 +79,8 @@ int main() {
                 color
             );
 
-            if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
-            if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
+            if (tri1.normal.y > 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
+            if (tri2.normal.y > 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
 
             GRAPH_TRIS.push_back(tri1);
             GRAPH_TRIS.push_back(tri2);
