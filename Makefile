@@ -8,6 +8,7 @@ AsczEngine:
 	nvcc \
 		-I include/Inner \
 		-I include/Graphic3D \
+		-I include/Shader3D \
 		-I include/Playground \
 		\
 		-I libraries/SFML/include \
@@ -25,6 +26,7 @@ AsczEngine:
 		src/Graphic3D/Color3D.cu \
 		src/Graphic3D/Render3D.cu \
 		src/Graphic3D/SFMLTexture.cu \
+		src/Shader3D/Light3D.cu \
 		\
 		AsczEngine.cu \
 		\

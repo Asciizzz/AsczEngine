@@ -1,6 +1,8 @@
 #include <SFMLTexture.cuh>
 #include <CsLogHandle.h>
 
+#include <Light3D.cuh>
+
 // Playground
 #include <Wall.cuh>
 #include <Cube3D.cuh>
@@ -14,6 +16,8 @@ int main() {
     Camera3D *CAM = new Camera3D();
     Render3D *RENDER = new Render3D(CAM, 1600, 900, 4);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
+
+    Light3D *LIGHT = new Light3D();
 
     // Debugging
     CsLogHandle *CSLOG = new CsLogHandle();
@@ -30,16 +34,16 @@ int main() {
     CAM->ang = Vec3D(0, 0, 0);
 
     RENDER->DEFAULT_COLOR = Color3D(0, 0, 0);
-    RENDER->LIGHT.pos = Vec3D(75, 140, 75);
+    // RENDER->LIGHT.pos = Vec3D(75, 140, 75);
 
     std::vector<Tri3D> TRI_VEC;
 
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/Sukuna.obj"
+        "assets/Models/Ak47.obj"
     );
     for (int i = 0; i < MODEL_1.size(); i++) {
         MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
-        MODEL_1[i].color = Color3D(255, 255, 255);
+        MODEL_1[i].color = Color3D(120, 255, 255);
         // MODEL_1[i].isTwoSided = true;
         TRI_VEC.push_back(MODEL_1[i]);
     }
@@ -201,12 +205,12 @@ int main() {
 
         // ================= Playground ====================
 
-        // Rotate the light source
-        RENDER->LIGHT.pos = Vec3D::rotate(
-            RENDER->LIGHT.pos, Vec3D(0, 0, 0),
-            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
-        );
+        // // Rotate the light source
+        // RENDER->LIGHT.pos = Vec3D::rotate(
+        //     RENDER->LIGHT.pos, Vec3D(0, 0, 0),
+        //     // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
+        //     Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
+        // );
 
         // // YOU are the light source
         // RENDER->LIGHT.pos = CAM->pos;
@@ -214,6 +218,8 @@ int main() {
 
         // ======= Main graphic rendering pipeline =======
         RENDER->renderGPU(tri_test, tri_count);
+
+        LIGHT->demo(RENDER);
 
         TEXTURE->updateTexture(RENDER);
         WINDOW.draw(TEXTURE->sprite);

@@ -8,28 +8,6 @@ struct Pixel3D {
     Vec3D normal;
     Vec3D world;
     Vec2D screen;
-    bool active = false;
-    bool valid = false;
-};
-
-// BETA!!!
-struct LightSrc3D {
-    Vec3D pos;
-    Vec3D normal = Vec3D(1, 1, 1);
-
-    // Keep in mind these values are usually not for the light source
-    // but for the surface of the object (in this case, the triangles)
-    double ambient = 0.1;
-    double specular = 1.1;
-
-    // To determine light color
-    /*
-    For example, if you want a red light,
-    set the rgbRatio to Vec3D(1.2, 0.8, 0.8)
-    to reduce green and blue light
-    while increasing red light
-    */
-    Vec3D rgbRatio = Vec3D(1, 1, 1);
 };
 
 class Render3D {
@@ -65,21 +43,19 @@ public:
     Pixel3D *BUFFER = new Pixel3D[0];
     Pixel3D *D_BUFFER; // Device buffer for kernel
     void setBuffer(int w, int h, int p_s);
+    void bufferMemcpy();
 
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
     void mallocTris(size_t size);
     void freeTris();
 
-    // BETA!
-    LightSrc3D LIGHT;
-
-    // To vec2D
-    __host__ __device__ static Vec2D toVec2D(const Camera3D &cam, Vec3D v);
+    __host__ __device__ static Vec2D toCameraPerspective(const Camera3D &cam, Vec3D v);
 
     // The main render function
     void renderGPU(Tri3D *tri3Ds, size_t size);
     void renderCPU(std::vector<Tri3D> tri3Ds); // Not recommended
+
 };
 
 // Kernel for resetting the buffer
@@ -100,11 +76,7 @@ __global__ void transform2Dkernel(
 
 // Kernel for rasterizing 2D triangles
 __global__ void rasterizeKernel(
-    // Buffer and triangles
     Pixel3D *pixels, const Tri2D *tri2Ds, const Tri3D *tri3Ds,
-    // Add other parameters here for future use
-    LightSrc3D light,
-    // Buffer size and data size
     int b_w, int b_h, size_t size
 );
 

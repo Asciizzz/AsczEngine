@@ -38,6 +38,11 @@ void Render3D::setBuffer(int w, int h, int p_s) {
     CUDA_CHECK(cudaMalloc(&D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D)));
 }
 
+void Render3D::bufferMemcpy() {
+    // Copy pixels back to host buffer
+    CUDA_CHECK(cudaMemcpy(BUFFER, D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyDeviceToHost));
+}
+
 void Render3D::resizeWindow(int w_w, int w_h, int p_s) {
     // Update window settings
     W_WIDTH = w_w;
@@ -45,6 +50,12 @@ void Render3D::resizeWindow(int w_w, int w_h, int p_s) {
     W_CENTER_X = w_w / 2;
     W_CENTER_Y = w_h / 2;
     PIXEL_SIZE = p_s;
+
+    // Update camera settings
+    CAMERA->w_width = w_w;
+    CAMERA->w_height = w_h;
+    CAMERA->w_center_x = W_CENTER_X;
+    CAMERA->w_center_y = W_CENTER_Y;
 
     // Free device buffer
     CUDA_CHECK(cudaFree(D_BUFFER));
@@ -65,23 +76,23 @@ void Render3D::freeTris() {
 }
 
 // To vec2D
-__host__ __device__ Vec2D Render3D::toVec2D(const Camera3D &cam, Vec3D v) {
+__host__ __device__ Vec2D Render3D::toCameraPerspective(const Camera3D &cam, Vec3D v) {
     Vec3D diff = Vec3D::sub(v, cam.pos);
 
     // Apply Yaw (rotation around Y axis)
-    float cosYaw = cos(-cam.ang.y);
-    float sinYaw = sin(-cam.ang.y);
-    float tempX = diff.x * cosYaw + diff.z * sinYaw;
-    float tempZ = -diff.x * sinYaw + diff.z * cosYaw;
+    double cosYaw = cos(-cam.ang.y);
+    double sinYaw = sin(-cam.ang.y);
+    double tempX = diff.x * cosYaw + diff.z * sinYaw;
+    double tempZ = -diff.x * sinYaw + diff.z * cosYaw;
 
     // Apply Pitch (rotation around X axis)
-    float cosPitch = cos(-cam.ang.x);
-    float sinPitch = sin(-cam.ang.x);
-    float finalY = tempZ * sinPitch + diff.y * cosPitch;
-    float finalZ = tempZ * cosPitch - diff.y * sinPitch;
+    double cosPitch = cos(-cam.ang.x);
+    double sinPitch = sin(-cam.ang.x);
+    double finalY = tempZ * sinPitch + diff.y * cosPitch;
+    double finalZ = tempZ * cosPitch - diff.y * sinPitch;
 
-    float projX = (tempX * cam.screendist) / finalZ;
-    float projY = -(finalY * cam.screendist) / finalZ;
+    double projX = (tempX * cam.screendist) / finalZ;
+    double projY = -(finalY * cam.screendist) / finalZ;
 
     if (finalZ < 0) {
         projX *= -10;
@@ -120,21 +131,10 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
     // Execute rasterization kernel
     for (int i = 0; i < 2; i++)
         rasterizeKernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
-            // Buffer and tris
             D_BUFFER, D_TRI2DS, D_TRI3DS,
-            // Other properties if needed
-            LIGHT,
-            // Size properties
             BUFFER_WIDTH, BUFFER_HEIGHT, size
         );
     CUDA_CHECK(cudaDeviceSynchronize());
-
-    // Copy pixels back to host buffer
-    CUDA_CHECK(cudaMemcpy(BUFFER, D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyDeviceToHost));
-
-    // // Free device memory
-    // CUDA_CHECK(cudaFree(D_TRI3DS));
-    // CUDA_CHECK(cudaFree(D_TRI2DS));
 }
 
 void Render3D::renderCPU(std::vector<Tri3D> tri3Ds) {
@@ -185,17 +185,15 @@ __global__ void transform2Dkernel(
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size || !tri3Ds[i].visible) return;
 
-    Vec2D v1 = Render3D::toVec2D(cam, tri3Ds[i].v1);
-    Vec2D v2 = Render3D::toVec2D(cam, tri3Ds[i].v2);
-    Vec2D v3 = Render3D::toVec2D(cam, tri3Ds[i].v3);
+    Vec2D v1 = Render3D::toCameraPerspective(cam, tri3Ds[i].v1);
+    Vec2D v2 = Render3D::toCameraPerspective(cam, tri3Ds[i].v2);
+    Vec2D v3 = Render3D::toCameraPerspective(cam, tri3Ds[i].v3);
 
     // Divide by pixel size
     v1.x /= p_s; v1.y /= p_s;
     v2.x /= p_s; v2.y /= p_s;
     v3.x /= p_s; v3.y /= p_s;
 
-    // IMPORTANT: v1 -> v3 will have ascending zDepth
-    // (note: we cannot use std::swap in device code)
     tri2Ds[i].v1 = v1;
     tri2Ds[i].v2 = v2;
     tri2Ds[i].v3 = v3;
@@ -214,24 +212,13 @@ __device__ bool atomicMinFloat(float* addr, float value) {
 }
 
 __global__ void rasterizeKernel(
-    // Buffer and tris
     Pixel3D *pixels, const Tri2D *tri2Ds, const Tri3D *tri3Ds,
-    // Other properties if needed
-    LightSrc3D light,
-    // Size properties
     int b_w, int b_h, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size || !tri3Ds[i].visible) return;
 
-    // // If the triangle is not visible, skip
-    // if (tri2Ds[i].v1.zDepth < 0 || tri2Ds[i].v2.zDepth < 0 || tri2Ds[i].v3.zDepth < 0) return;
-    // if (tri2Ds[i].v1.x < 0 || tri2Ds[i].v2.x < 0 || tri2Ds[i].v3.x < 0) return;
-    // if (tri2Ds[i].v1.y < 0 || tri2Ds[i].v2.y < 0 || tri2Ds[i].v3.y < 0) return;
-    // if (tri2Ds[i].v1.x >= b_w || tri2Ds[i].v2.x >= b_w || tri2Ds[i].v3.x >= b_w) return;
-    // if (tri2Ds[i].v1.y >= b_h || tri2Ds[i].v2.y >= b_h || tri2Ds[i].v3.y >= b_h) return;
-
-    // The correct one
+    // Ignore non-visible triangles
     if (tri2Ds[i].v1.zDepth < 0 && tri2Ds[i].v2.zDepth < 0 && tri2Ds[i].v3.zDepth < 0) return;
     if (tri2Ds[i].v1.x < 0 && tri2Ds[i].v2.x < 0 && tri2Ds[i].v3.x < 0) return;
     if (tri2Ds[i].v1.y < 0 && tri2Ds[i].v2.y < 0 && tri2Ds[i].v3.y < 0) return;
@@ -288,42 +275,37 @@ __global__ void rasterizeKernel(
         Vec3D world(px, py, pz);
 
         // =================== LIGHTING =======================
+        // !!! DECRAPIATED !!!
+
         // (you can modify the lighting logic based on the type of light)
         // (there are: spot light, point light, directional light, etc.)
 
-        if (!tri3Ds[i].lighting) {
-            pixels[index] = {
-                tri3Ds[i].color, tri3Ds[i].normal, world, screen, true
-            };
-            continue;
-        }
-
         // BETA: Light color manipulation
-        Color3D color = tri3Ds[i].color;
+        // Color3D color = tri3Ds[i].color;
 
-        Vec3D lightDir = Vec3D::sub(light.pos, world);
-        double cosA = Vec3D::dot(tri3Ds[i].normal, lightDir) /
-            (Vec3D::mag(tri3Ds[i].normal) * Vec3D::mag(lightDir));
-        // Note: we cannot use std::max and std::min in device code
-        // if (cosA < 0) cosA = 0;
+        // Vec3D lightDir = Vec3D::sub(light.pos, world);
+        // double cosA = Vec3D::dot(tri3Ds[i].normal, lightDir) /
+        //     (Vec3D::mag(tri3Ds[i].normal) * Vec3D::mag(lightDir));
+        // // Note: we cannot use std::max and std::min in device code
+        // // if (cosA < 0) cosA = 0;
 
-        if (cosA < 0) cosA = tri3Ds[i].isTwoSided ? -cosA : 0;
+        // if (cosA < 0) cosA = tri3Ds[i].isTwoSided ? -cosA : 0;
 
-        double ratio = light.ambient + cosA * (light.specular - light.ambient);
+        // double ratio = light.ambient + cosA * (light.specular - light.ambient);
 
-        color.runtimeRGB.mult(ratio);
+        // color.runtimeRGB.mult(ratio);
 
-        // Apply colored light
-        color.runtimeRGB.v1 = color.runtimeRGB.v1 * light.rgbRatio.x;
-        color.runtimeRGB.v2 = color.runtimeRGB.v2 * light.rgbRatio.y;
-        color.runtimeRGB.v3 = color.runtimeRGB.v3 * light.rgbRatio.z;
+        // // Apply colored light
+        // color.runtimeRGB.v1 = color.runtimeRGB.v1 * light.rgbRatio.x;
+        // color.runtimeRGB.v2 = color.runtimeRGB.v2 * light.rgbRatio.y;
+        // color.runtimeRGB.v3 = color.runtimeRGB.v3 * light.rgbRatio.z;
 
-        // Restrict color values
-        color.runtimeRGB.restrictRGB();
+        // // Restrict color values
+        // color.runtimeRGB.restrictRGB();
 
         // Set buffer values
         pixels[index] = {
-            color, tri3Ds[i].normal, world, screen, true
+            tri3Ds[i].color, tri3Ds[i].normal, world, screen
         };
     }
 }
