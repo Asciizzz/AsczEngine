@@ -131,8 +131,8 @@ std::vector<Tri3D> Tri3D::readObj(std::string filename) {
     }
 
     for (Tri3D &tri : tris) {
-        double translateX = - (maxX + minX) / 2;
-        double translateY = - minY;
+        double translateX = -(maxX + minX) / 2;
+        double translateY = -(maxY + minY) / 2;
 
         tri.translate(Vec3D(translateX, translateY, 0));
     }

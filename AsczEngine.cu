@@ -30,12 +30,12 @@ int main() {
     // =================== EXPERIMENTATION =======================
 
     // Initialize stuff
-    CAM->pos = Vec3D(0, 30, -120);
+    CAM->pos = Vec3D(0, 0, -50);
     CAM->ang = Vec3D(0, 0, 0);
 
     RENDER->DEFAULT_COLOR = Color3D(0, 0, 0);
 
-    LIGHT->pos = Vec3D(75, 140, 75);
+    LIGHT->pos = Vec3D(0, 0, 50);
 
     // Triangle Vector 
     std::vector<Tri3D> TRI_VEC;
@@ -44,7 +44,7 @@ int main() {
         "assets/Models/Sukuna.obj"
     );
     for (int i = 0; i < MODEL_1.size(); i++) {
-        MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
+        MODEL_1[i].scale(Vec3D(), Vec3D(20, 20, 20));
         MODEL_1[i].color = Color3D(120, 255, 255);
         // MODEL_1[i].isTwoSided = true;
         TRI_VEC.push_back(MODEL_1[i]);
@@ -53,10 +53,10 @@ int main() {
     // Function y = f(x, z) to create a 3D graph
     std::vector<std::vector<Vec3D>> GRAPH_POINTS;
     std::vector<Tri3D> GRAPH_TRIS;
-    for (double x = -10; x < 10; x += 0.1) {
+    for (double x = -5; x < 5; x += 0.1) {
         GRAPH_POINTS.push_back(std::vector<Vec3D>());
-        for (double z = -10; z < 10; z += 0.1) {
-            double y = -10;
+        for (double z = -5; z < 5; z += 0.1) {
+            double y = -5;
 
             GRAPH_POINTS.back().push_back(Vec3D(x, y, z));
         }
@@ -79,9 +79,6 @@ int main() {
                 color
             );
 
-            tri1.scale(Vec3D(), Vec3D(20, 20, 20));
-            tri2.scale(Vec3D(), Vec3D(20, 20, 20));
-
             if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
             if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
 
@@ -91,21 +88,23 @@ int main() {
     }
 
     for (Tri3D &tri : GRAPH_TRIS) {
-        // Floor
+        // Scaling
+        tri.scale(Vec3D(), Vec3D(20, 20, 20));
+        // Floor (-y)
         TRI_VEC.push_back(tri);
-        // Back wall
+        // -z wall
         tri.rotate(Vec3D(), Vec3D(-M_PI_2, 0, 0));
         TRI_VEC.push_back(tri);
-        // Left Wall
+        // +x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
         TRI_VEC.push_back(tri);
-        // Front Wall
+        // +z Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
         TRI_VEC.push_back(tri);
-        // Right Wall
+        // -x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
         TRI_VEC.push_back(tri);
-        // Ceiling
+        // Ceiling (+y)
         tri.rotate(Vec3D(), Vec3D(0, 0, -M_PI_2));
         TRI_VEC.push_back(tri);
     }
