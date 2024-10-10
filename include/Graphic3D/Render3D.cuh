@@ -19,7 +19,7 @@ struct LightSrc3D {
 
     // Keep in mind these values are usually not for the light source
     // but for the surface of the object (in this case, the triangles)
-    double ambient = 0.05;
+    double ambient = 0.1;
     double specular = 1.1;
 
     // To determine light color

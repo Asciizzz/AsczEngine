@@ -8,9 +8,11 @@
 int main() {
 
     // =================== INITIALIZATION =======================
+    // Pixel size 4 is the sweet spot for performance and quality
+
     FpsHandle *FPS = new FpsHandle();
     Camera3D *CAM = new Camera3D();
-    Render3D *RENDER = new Render3D(CAM, 1600, 900, 2);
+    Render3D *RENDER = new Render3D(CAM, 1600, 900, 4);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
 
     // Debugging
@@ -27,12 +29,13 @@ int main() {
     CAM->pos = Vec3D(0, 90, -120);
     CAM->ang = Vec3D(0, 0, 0);
 
+    RENDER->DEFAULT_COLOR = Color3D(0, 0, 0);
     RENDER->LIGHT.pos = Vec3D(75, 140, 75);
 
     std::vector<Tri3D> TRI_VEC;
 
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/malevolent_shrine.obj"
+        "assets/Models/Sukuna.obj"
     );
     for (int i = 0; i < MODEL_1.size(); i++) {
         MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
@@ -185,7 +188,16 @@ int main() {
         sf::Color fpsColor((1 - gRatio) * 255, gRatio * 255, 0);
         CSLOG->addLog("FPS: " + std::to_string(FPS->fps), fpsColor);
 
-        CSLOG->addLog(CAM->log, sf::Color::Cyan);
+        std::string add = ""; // For million and billion
+        size_t displayNum = tri_count;
+        if (displayNum > 1'000'000'000) {
+            displayNum /= 1'000'000'000; add = "B";
+        } else if (displayNum > 1'000'000) {
+            displayNum /= 1'000'000; add = "M";
+        }
+        CSLOG->addLog("TRI_COUNT: " + std::to_string(displayNum) + add, sf::Color::Yellow);
+
+        CSLOG->addLog(CAM->log, sf::Color::Red);
 
         // ================= Playground ====================
 
