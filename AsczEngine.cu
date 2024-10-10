@@ -10,7 +10,7 @@ int main() {
     // =================== INITIALIZATION =======================
     FpsHandle *FPS = new FpsHandle();
     Camera3D *CAM = new Camera3D();
-    Render3D *RENDER = new Render3D(CAM, 1600, 900, 4);
+    Render3D *RENDER = new Render3D(CAM, 1600, 900, 2);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
 
     // Debugging
@@ -82,6 +82,7 @@ int main() {
 
     size_t tri_count = TRI_VEC.size();
     Tri3D *tri_test = new Tri3D[tri_count];
+    RENDER->mallocTris(tri_count);
 
     for (int i = 0; i < tri_count; i++)
         tri_test[i] = TRI_VEC[i];
@@ -96,7 +97,6 @@ int main() {
         FPS->startFrame();
 
         // Resets
-        RENDER->reset();
         CSLOG->clear();
 
     // =================== EVENT HANDLING =======================

@@ -51,34 +51,25 @@ public:
     int PIXEL_SIZE;
 
     // Default color
-    // Color3D DEFAULT_COLOR = Color3D(25, 40, 90);
-    Color3D DEFAULT_COLOR = Color3D(10, 10, 10);
+    Color3D DEFAULT_COLOR = Color3D(0, 180, 255);
+
+    // Block size and count
+    const size_t BLOCK_SIZE = 256;
+    size_t BLOCK_TRI_COUNT;
+    size_t BLOCK_BUFFER_COUNT;
 
     // Buffer
     int BUFFER_WIDTH;
     int BUFFER_HEIGHT;
     int BUFFER_SIZE;
-    Pixel3D *BUFFER;
-
-    /*
-    We will perform rasterization, BUT only get depth first to avoid
-    lighting calculations that would eventually be discarded
-    as we find another pixel that is closer to the camera.
-
-    After we have the index of the Triangles of the pixel, we will
-    finally perform the lighting calculations.
-     */
-    double *BUFFER_DEPTH;
-    int *BUFFER_INDEX; // INCREDIBLY IMPORTANT
-
-    // CUDA stuffs
-    Pixel3D *D_BUFFER;
-    double *D_BUFF_DEPTH;
-    int *D_BUFF_INDEX;
+    Pixel3D *BUFFER = new Pixel3D[0];
+    Pixel3D *D_BUFFER; // Device buffer for kernel
+    void setBuffer(int w, int h, int p_s);
 
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
-    const size_t BLOCK_SIZE = 256;
+    void mallocTris(size_t size);
+    void freeTris();
 
     // BETA!
     LightSrc3D LIGHT;
@@ -89,14 +80,11 @@ public:
     // The main render function
     void renderGPU(Tri3D *tri3Ds, size_t size);
     void renderCPU(std::vector<Tri3D> tri3Ds); // Not recommended
-
-    // Reset all
-    void reset();
 };
 
-// Kernel for filling every pixel in the buffer with a default color
-__global__ void fillBufferKernel(
-    Pixel3D *buffer, Color3D color, size_t size
+// Kernel for resetting the buffer
+__global__ void resetBufferKernel(
+    Pixel3D *buffer, Color3D def_color, size_t size
 );
 
 // Kernel for checking if triangles are visible
