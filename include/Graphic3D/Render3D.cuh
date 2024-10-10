@@ -8,6 +8,8 @@ struct Pixel3D {
     Vec3D normal;
     Vec3D world;
     Vec2D screen;
+    bool shadow = true;
+    bool lighting = true;
 };
 
 class Render3D {

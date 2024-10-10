@@ -87,6 +87,8 @@ __global__ void lightingKernel(
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size) return;
 
+    // return; // Temporary
+
     Color3D color = pixels[i].color;
 
     Vec3D negLightNormal = Vec3D::mult(light.normal, -1);
@@ -118,16 +120,16 @@ __global__ void lightOrthographicKernel(
     if (i >= size) return;
 
     // We literally just need to project onto the xy plane
-    tri2Ds[i].v1.x = tri3Ds[i].v1.x / p_s;
-    tri2Ds[i].v1.y = tri3Ds[i].v1.y / p_s;
+    tri2Ds[i].v1.x = tri3Ds[i].v1.x;
+    tri2Ds[i].v1.y = tri3Ds[i].v1.y;
     tri2Ds[i].v1.zDepth = tri3Ds[i].v1.z;
 
-    tri2Ds[i].v2.x = tri3Ds[i].v2.x / p_s;
-    tri2Ds[i].v2.y = tri3Ds[i].v2.y / p_s;
+    tri2Ds[i].v2.x = tri3Ds[i].v2.x;
+    tri2Ds[i].v2.y = tri3Ds[i].v2.y;
     tri2Ds[i].v2.zDepth = tri3Ds[i].v2.z;
 
-    tri2Ds[i].v3.x = tri3Ds[i].v3.x / p_s;
-    tri2Ds[i].v3.y = tri3Ds[i].v3.y / p_s;
+    tri2Ds[i].v3.x = tri3Ds[i].v3.x;
+    tri2Ds[i].v3.y = tri3Ds[i].v3.y;
     tri2Ds[i].v3.zDepth = tri3Ds[i].v3.z;
 }
 
@@ -153,16 +155,16 @@ __global__ void sharedTri2DsKernel(
     tri2Dcam[i].v3.y /= p_s;
 
     // We literally just need to project onto the xy plane
-    tri2Dlight[i].v1.x = tri3Ds[i].v1.x / p_s;
-    tri2Dlight[i].v1.y = tri3Ds[i].v1.y / p_s;
+    tri2Dlight[i].v1.x = tri3Ds[i].v1.x;
+    tri2Dlight[i].v1.y = tri3Ds[i].v1.y;
     tri2Dlight[i].v1.zDepth = tri3Ds[i].v1.z;
 
-    tri2Dlight[i].v2.x = tri3Ds[i].v2.x / p_s;
-    tri2Dlight[i].v2.y = tri3Ds[i].v2.y / p_s;
+    tri2Dlight[i].v2.x = tri3Ds[i].v2.x;
+    tri2Dlight[i].v2.y = tri3Ds[i].v2.y;
     tri2Dlight[i].v2.zDepth = tri3Ds[i].v2.z;
 
-    tri2Dlight[i].v3.x = tri3Ds[i].v3.x / p_s;
-    tri2Dlight[i].v3.y = tri3Ds[i].v3.y / p_s;
+    tri2Dlight[i].v3.x = tri3Ds[i].v3.x;
+    tri2Dlight[i].v3.y = tri3Ds[i].v3.y;
     tri2Dlight[i].v3.zDepth = tri3Ds[i].v3.z;
 }
 
@@ -222,15 +224,17 @@ __global__ void applyShadowKernel(
     // Get the pixel
     Pixel3D pixel = buffer[i];
 
+    if (!pixel.shadow) return;
+
     // Get the pixel's position
-    int x = i % s_w;
-    int y = i / s_w;
+    int x = pixel.world.x;
+    int y = pixel.world.y;
 
     // Get the depth
-    float depth = pixel.screen.zDepth;
+    float depth = pixel.world.z;
 
     // Get the shadow map index
-    int index = x / p_s + y / p_s * s_w;
+    int index = x + y * s_w;
 
     // Get the shadow map depth
     float shadowDepth = shadowMap[index];

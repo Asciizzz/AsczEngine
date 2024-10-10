@@ -35,6 +35,7 @@ public:
     Color3D color;
     Vec3D normal;
     bool isTwoSided;
+    bool shadow = true;
     bool lighting = true;
 
     // Default constructor

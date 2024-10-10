@@ -14,7 +14,7 @@ int main() {
 
     FpsHandle *FPS = new FpsHandle();
     Camera3D *CAM = new Camera3D();
-    Render3D *RENDER = new Render3D(CAM, 1600, 900, 4);
+    Render3D *RENDER = new Render3D(CAM, 1600, 900, 2);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
 
     Light3D *LIGHT = new Light3D(RENDER);
@@ -39,6 +39,18 @@ int main() {
 
     // Triangle Vector 
     std::vector<Tri3D> TRI_VEC;
+
+    // Importing models
+    std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
+        "assets/Models/Sukuna.obj"
+    );
+    size_t model_size = MODEL_1.size();
+    for (int i = 0; i < MODEL_1.size(); i++) {
+        MODEL_1[i].scale(Vec3D(), Vec3D(20, 20, 20));
+        MODEL_1[i].color = Color3D(120, 255, 255);
+        MODEL_1[i].shadow = false;
+        TRI_VEC.push_back(MODEL_1[i]);
+    }
 
     // Function y = f(x, z) to create a 3D graph
     std::vector<std::vector<Vec3D>> GRAPH_POINTS;
@@ -81,36 +93,25 @@ int main() {
         // Scaling
         tri.scale(Vec3D(), Vec3D(20, 20, 20));
         // Floor (-y)
-        TRI_VEC.push_back(tri);
+        // TRI_VEC.push_back(tri);
         // +z wall
         tri.rotate(Vec3D(), Vec3D(-M_PI_2, 0, 0));
         TRI_VEC.push_back(tri);
         // +x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
-        TRI_VEC.push_back(tri);
+        // TRI_VEC.push_back(tri);
         // -z Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
         // TRI_VEC.push_back(tri);
         // -x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
-        TRI_VEC.push_back(tri);
+        // TRI_VEC.push_back(tri);
         // Ceiling (+y)
         tri.rotate(Vec3D(), Vec3D(0, 0, -M_PI_2));
-        TRI_VEC.push_back(tri);
+        // TRI_VEC.push_back(tri);
     }
 
     size_t graph_size = TRI_VEC.size();
-
-    // Importing models
-    std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/Sukuna.obj"
-    );
-    for (int i = 0; i < MODEL_1.size(); i++) {
-        MODEL_1[i].scale(Vec3D(), Vec3D(20, 20, 20));
-        MODEL_1[i].color = Color3D(120, 255, 255);
-        // MODEL_1[i].isTwoSided = true;
-        TRI_VEC.push_back(MODEL_1[i]);
-    }
 
     size_t tri_count = TRI_VEC.size();
     Tri3D *tri_test = new Tri3D[tri_count];
@@ -149,13 +150,27 @@ int main() {
         minX = std::min(minX, minVx);
         minY = std::min(minY, minVy);
         minZ = std::min(minZ, minVz);
+    }
 
+    for (Tri3D &tri : TRI_VEC) {
+        tri.v1.x -= minX;
+        tri.v2.x -= minX;
+        tri.v3.x -= minX;
+        tri.v1.y -= minY;
+        tri.v2.y -= minY;
+        tri.v3.y -= minY;
+        tri.v1.z -= minZ;
+        tri.v2.z -= minZ;
+        tri.v3.z -= minZ;
+    }
+
+    for (int i = 0; i < tri_count; i++) {
         tri_test[i] = TRI_VEC[i];
     }
 
-    LIGHT->initShadowMap(maxX - minX, maxY - minY, RENDER->PIXEL_SIZE);
+    Tri3D *model_tri = tri_test;
 
-    // Tri3D *GRAPH = tri_test;
+    LIGHT->initShadowMap(maxX - minX, maxY - minY, 1);
 
     // Unrelated stuff
     double rainbowR = 255;
@@ -268,16 +283,12 @@ int main() {
 
         // ================= Playground ====================
 
-        // Rotate the light source
-        LIGHT->pos = Vec3D::rotate(
-            LIGHT->pos, Vec3D(0, 0, 0),
-            // Vec3D(M_PI / 6 * FPS->dTimeSec, 0, M_PI / 6 * FPS->dTimeSec)
-            Vec3D(0, M_PI / 6 * FPS->dTimeSec, 0)
-        );
-
-        // // YOU are the light source
-        // LIGHT->pos = CAM->pos;
-        // LIGHT->normal = CAM->plane.normal;
+        // Rotate the model
+        for (int i = 0; i < model_size; i++) {
+            model_tri[i].rotate(Vec3D(
+                (maxX - minX) / 2, (maxY - minY) / 2, (maxZ - minZ) / 2
+            ), Vec3D(0, 0.01, 0));
+        }
 
         // ======= Main graphic rendering pipeline =======
         RENDER->memcpyTris(tri_test);

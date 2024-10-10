@@ -273,7 +273,11 @@ __global__ void rasterizeKernel(
         Vec3D world(px, py, pz);
 
         pixels[index] = {
-            tri3Ds[i].color, tri3Ds[i].normal, world, screen
+            tri3Ds[i].color,
+            tri3Ds[i].normal,
+            world, screen,
+            tri3Ds[i].shadow,
+            tri3Ds[i].lighting
         };
     }
 }
