@@ -17,7 +17,7 @@ int main() {
     Render3D *RENDER = new Render3D(CAM, 1600, 900, 4);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
 
-    Light3D *LIGHT = new Light3D();
+    Light3D *LIGHT = new Light3D(RENDER);
 
     // Debugging
     CsLogHandle *CSLOG = new CsLogHandle();
@@ -282,11 +282,15 @@ int main() {
         // ======= Main graphic rendering pipeline =======
         RENDER->memcpyTris(tri_test);
         RENDER->resetBuffer();
+        LIGHT->resetShadowMap();
         RENDER->visibleTriangles();
-        LIGHT->sharedTri2Ds(RENDER);
+        LIGHT->sharedTri2Ds();
         RENDER->rasterize();
+        LIGHT->lighting();
+        LIGHT->shadowMap();
+        LIGHT->applyShadow();
 
-        LIGHT->demo(RENDER);
+        RENDER->memcpyBuffer();
 
         TEXTURE->updateTexture(RENDER);
         WINDOW.draw(TEXTURE->sprite);

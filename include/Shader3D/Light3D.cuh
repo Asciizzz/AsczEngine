@@ -38,8 +38,9 @@ Control the quality with the pixel size
 
 class Light3D {
 public:
-    Light3D();
+    Light3D(Render3D *render);
     ~Light3D();
+    Render3D *RENDER;
 
     double ambient = 0.1;
     double specular = 1.1;
@@ -58,14 +59,22 @@ public:
     int SHADOW_MAP_WIDTH;
     int SHADOW_MAP_HEIGHT;
     int SHADOW_MAP_SIZE;
+    const size_t SHADOW_MAP_BLOCK_SIZE = 256;
+    size_t SHADOW_MAP_BLOCK_COUNT;
     void initShadowMap(int w, int h, int p_s);
-    __host__ __device__ Vec2D toLightOrthographic(Light3D light, Vec3D v);
 
-    // Demo
-    void demo(Render3D *render);
-
-    void sharedTri2Ds(Render3D *render);
+    void resetShadowMap();
+    void sharedTri2Ds();
+    void lighting();
+    void shadowMap();
+    void applyShadow();
 };
+
+// ========================= KERNELS =========================
+
+__global__ void resetShadowMapKernel(
+    float *shadowMap, int size
+);
 
 // Kernel that convert tri3Ds to tri2Ds
 // Literally the same as the one in Render3D
@@ -83,6 +92,16 @@ __global__ void lightingKernel(
 __global__ void sharedTri2DsKernel(
     Tri2D *tri2Dcam, Tri2D *tri2Dlight, const Tri3D *tri3Ds,
     const Camera3D cam, int p_s, size_t size
+);
+
+// Kernel for putting the pixel on the shadow map
+__global__ void shadowMapKernel(
+    float *shadowMap, Tri2D *tri2Ds, int s_w, int s_h, size_t size
+);
+
+// Kernel for applying shadow
+__global__ void applyShadowKernel(
+    Pixel3D *buffer, float *shadowMap, int s_w, int s_h, int p_s, size_t size
 );
 
 #endif

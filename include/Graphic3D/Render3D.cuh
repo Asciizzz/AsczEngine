@@ -62,6 +62,10 @@ public:
     void rasterize();
 };
 
+// ================= KERNELS AND DEVICE FUNCTIONS =================
+
+__device__ bool atomicMinFloat(float* addr, float value);
+
 // Kernel for resetting the buffer
 __global__ void resetBufferKernel(
     Pixel3D *buffer, Color3D def_color, size_t size

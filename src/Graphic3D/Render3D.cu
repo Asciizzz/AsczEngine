@@ -139,7 +139,19 @@ void Render3D::rasterize() {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// ========================= KERNELS =========================
+// ================= KERNELS AND DEVICE FUNCTIONS =================
+
+__device__ bool atomicMinFloat(float* addr, float value) {
+    int* addr_as_int = (int*)addr;
+    int old = *addr_as_int, assumed;
+
+    do {
+        assumed = old;
+        old = atomicCAS(addr_as_int, assumed, __float_as_int(fminf(value, __int_as_float(assumed))));
+    } while (assumed != old);
+
+    return __int_as_float(old) > value;
+}
 
 __global__ void resetBufferKernel(
     Pixel3D *buffer, Color3D def_color, size_t size
@@ -196,18 +208,6 @@ __global__ void cameraPerspectivekernel(
     tri2Ds[i].v1 = v1;
     tri2Ds[i].v2 = v2;
     tri2Ds[i].v3 = v3;
-}
-
-__device__ bool atomicMinFloat(float* addr, float value) {
-    int* addr_as_int = (int*)addr;
-    int old = *addr_as_int, assumed;
-
-    do {
-        assumed = old;
-        old = atomicCAS(addr_as_int, assumed, __float_as_int(fminf(value, __int_as_float(assumed))));
-    } while (assumed != old);
-
-    return __int_as_float(old) > value;
 }
 
 __global__ void rasterizeKernel(
