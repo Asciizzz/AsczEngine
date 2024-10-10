@@ -39,7 +39,6 @@ void Render3D::setBuffer(int w, int h, int p_s) {
 }
 
 void Render3D::bufferMemcpy() {
-    // Copy pixels back to host buffer
     CUDA_CHECK(cudaMemcpy(BUFFER, D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyDeviceToHost));
 }
 
@@ -68,11 +67,14 @@ void Render3D::mallocTris(size_t size) {
 
     CUDA_CHECK(cudaMalloc(&D_TRI3DS, size * sizeof(Tri3D)));
     CUDA_CHECK(cudaMalloc(&D_TRI2DS, size * sizeof(Tri2D)));
-
 }
 void Render3D::freeTris() {
     CUDA_CHECK(cudaFree(D_TRI3DS));
     CUDA_CHECK(cudaFree(D_TRI2DS));
+}
+void Render3D::resizeTris(size_t size) {
+    freeTris();
+    mallocTris(size);
 }
 
 // To vec2D
@@ -189,7 +191,6 @@ __global__ void transform2Dkernel(
     Vec2D v2 = Render3D::toCameraPerspective(cam, tri3Ds[i].v2);
     Vec2D v3 = Render3D::toCameraPerspective(cam, tri3Ds[i].v3);
 
-    // Divide by pixel size
     v1.x /= p_s; v1.y /= p_s;
     v2.x /= p_s; v2.y /= p_s;
     v3.x /= p_s; v3.y /= p_s;

@@ -49,13 +49,13 @@ public:
     Tri2D *D_TRI2DS;
     void mallocTris(size_t size);
     void freeTris();
+    void resizeTris(size_t size); // Should only be called if really necessary
 
     __host__ __device__ static Vec2D toCameraPerspective(const Camera3D &cam, Vec3D v);
 
     // The main render function
     void renderGPU(Tri3D *tri3Ds, size_t size);
     void renderCPU(std::vector<Tri3D> tri3Ds); // Not recommended
-
 };
 
 // Kernel for resetting the buffer

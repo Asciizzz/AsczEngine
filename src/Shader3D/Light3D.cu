@@ -1,10 +1,13 @@
 #include <Light3D.cuh>
 
-void Light3D::demo(Render3D *render) {
-    const size_t block_size = 256;
-    const size_t block_count = (render->BUFFER_SIZE + block_size - 1) / block_size;
+Light3D::Light3D() {
+}
 
-    lightingKernel<<<block_count, block_size>>>(
+Light3D::~Light3D() {
+}
+
+void Light3D::demo(Render3D *render) {
+    lightingKernel<<<render->BLOCK_BUFFER_COUNT, render->BLOCK_SIZE>>>(
         render->D_BUFFER, *this, render->BUFFER_SIZE
     );
     CUDA_CHECK(cudaDeviceSynchronize());

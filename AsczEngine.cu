@@ -35,20 +35,10 @@ int main() {
 
     RENDER->DEFAULT_COLOR = Color3D(0, 0, 0);
 
-    LIGHT->pos = Vec3D(0, 0, 200);
+    LIGHT->pos = Vec3D(0, 0, 50);
 
     // Triangle Vector 
     std::vector<Tri3D> TRI_VEC;
-
-    std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/Sukuna.obj"
-    );
-    for (int i = 0; i < MODEL_1.size(); i++) {
-        MODEL_1[i].scale(Vec3D(), Vec3D(20, 20, 20));
-        MODEL_1[i].color = Color3D(120, 255, 255);
-        // MODEL_1[i].isTwoSided = true;
-        TRI_VEC.push_back(MODEL_1[i]);
-    }
 
     // Function y = f(x, z) to create a 3D graph
     std::vector<std::vector<Vec3D>> GRAPH_POINTS;
@@ -79,8 +69,8 @@ int main() {
                 color
             );
 
-            if (tri1.normal.y > 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
-            if (tri2.normal.y > 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
+            if (tri1.normal.y < 0) tri1.normal = Vec3D::mult(tri1.normal, -1);
+            if (tri2.normal.y < 0) tri2.normal = Vec3D::mult(tri2.normal, -1);
 
             GRAPH_TRIS.push_back(tri1);
             GRAPH_TRIS.push_back(tri2);
@@ -109,12 +99,27 @@ int main() {
         TRI_VEC.push_back(tri);
     }
 
+    size_t graph_size = TRI_VEC.size();
+
+    // Importing models
+    std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
+        "assets/Models/Sukuna.obj"
+    );
+    for (int i = 0; i < MODEL_1.size(); i++) {
+        MODEL_1[i].scale(Vec3D(), Vec3D(20, 20, 20));
+        MODEL_1[i].color = Color3D(120, 255, 255);
+        // MODEL_1[i].isTwoSided = true;
+        TRI_VEC.push_back(MODEL_1[i]);
+    }
+
     size_t tri_count = TRI_VEC.size();
     Tri3D *tri_test = new Tri3D[tri_count];
     RENDER->mallocTris(tri_count);
 
     for (int i = 0; i < tri_count; i++)
         tri_test[i] = TRI_VEC[i];
+
+    Tri3D *GRAPH = tri_test;
 
     // Unrelated stuff
     double rainbowR = 255;
