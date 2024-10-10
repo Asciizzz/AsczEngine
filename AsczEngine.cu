@@ -14,7 +14,7 @@ int main() {
 
     FpsHandle *FPS = new FpsHandle();
     Camera3D *CAM = new Camera3D();
-    Render3D *RENDER = new Render3D(CAM, 1600, 900, 2);
+    Render3D *RENDER = new Render3D(CAM, 1600, 900, 4);
     SFMLTexture *TEXTURE = new SFMLTexture(RENDER);
 
     Light3D *LIGHT = new Light3D(RENDER);
