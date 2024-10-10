@@ -24,29 +24,29 @@ int main() {
     // =================== EXPERIMENTATION =======================
 
     // Initialize stuff
-    CAM->pos = Vec3D(0, 0, -60);
-    CAM->ang = Vec3D(0, M_PI, 0);
+    CAM->pos = Vec3D(0, 90, -120);
+    CAM->ang = Vec3D(0, 0, 0);
 
-    RENDER->LIGHT.pos = Vec3D(0, 20, 60);
+    RENDER->LIGHT.pos = Vec3D(75, 140, 75);
 
     std::vector<Tri3D> TRI_VEC;
 
-    // std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-    //     "assets/Models/malevolent_shrine.obj"
-    // );
-    // for (int i = 0; i < MODEL_1.size(); i++) {
-    //     MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
-    //     MODEL_1[i].color = Color3D(232, 211, 139);
-    //     MODEL_1[i].isTwoSided = true;
-    //     TRI_VEC.push_back(MODEL_1[i]);
-    // }
+    std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
+        "assets/Models/malevolent_shrine.obj"
+    );
+    for (int i = 0; i < MODEL_1.size(); i++) {
+        MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
+        MODEL_1[i].color = Color3D(255, 255, 255);
+        MODEL_1[i].isTwoSided = true;
+        TRI_VEC.push_back(MODEL_1[i]);
+    }
 
     // Function y = f(x, z) to create a 3D graph
     std::vector<std::vector<Vec3D>> points;
     for (double x = -10; x < 10; x += 0.1) {
         points.push_back(std::vector<Vec3D>());
         for (double z = -10; z < 10; z += 0.1) {
-            double y = sin(x) * cos(z) - 2;
+            double y = 0;
 
             points.back().push_back(Vec3D(x, y, z));
         }
@@ -58,6 +58,7 @@ int main() {
             double cz = 50 + 150 * double(z) / points[x].size();
             double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
             Color3D color = Color3D(232, 211, 139 + 20 * double(x) / points.size());
+            color = Color3D(255, 255, 255);
 
             Tri3D tri1 = Tri3D(
                 points[x][z], points[x + 1][z], points[x][z + 1],
@@ -82,9 +83,8 @@ int main() {
     size_t tri_count = TRI_VEC.size();
     Tri3D *tri_test = new Tri3D[tri_count];
 
-    for (int i = 0; i < tri_count; i++) {
+    for (int i = 0; i < tri_count; i++)
         tri_test[i] = TRI_VEC[i];
-    }
 
     // Unrelated stuff
     double rainbowR = 255;
