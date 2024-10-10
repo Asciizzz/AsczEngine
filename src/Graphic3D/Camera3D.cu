@@ -17,6 +17,8 @@ void Camera3D::dynamicFov() {
     */
 }
 
+// 
+
 void Camera3D::updatePlane() {
     Vec3D normal(
         cos(ang.x) * sin(ang.y),

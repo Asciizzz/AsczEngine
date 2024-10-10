@@ -20,8 +20,8 @@ public:
     double vel = 0;
     void updatePosition();
 
-        // FoV
-    double fov = 120;
+    // FoV
+    double fov = 90;
     double screendist;
     void dynamicFov();
     // Fps camera movement

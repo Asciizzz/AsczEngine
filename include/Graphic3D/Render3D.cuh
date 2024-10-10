@@ -15,7 +15,7 @@ struct Pixel3D {
 // BETA!!!
 struct LightSrc3D {
     Vec3D pos;
-    Vec3D normal = Vec3D(0, -1, 0);
+    Vec3D normal = Vec3D(1, 1, 1);
 
     // Keep in mind these values are usually not for the light source
     // but for the surface of the object (in this case, the triangles)
@@ -37,7 +37,7 @@ public:
     Render3D(Camera3D *camera, int w_w=1600, int w_h=900, int p_s=4);
     ~Render3D();
 
-    void resize(int w_w, int w_h, int p_s);
+    void resizeWindow(int w_w, int w_h, int p_s);
 
     // Camera
     Camera3D *CAMERA;
@@ -51,7 +51,7 @@ public:
     int PIXEL_SIZE;
 
     // Default color
-    Color3D DEFAULT_COLOR = Color3D(0, 180, 255);
+    Color3D DEFAULT_COLOR;
 
     // Block size and count
     const size_t BLOCK_SIZE = 256;
@@ -93,7 +93,7 @@ __global__ void visisbleTrianglesKernel(
 );
 
 // Kernel for converting 3D triangles to 2D triangles
-__global__ void tri3DsTo2DsKernel(
+__global__ void transform2Dkernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds,
     Camera3D cam, int p_s, size_t size
 );

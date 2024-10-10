@@ -26,7 +26,7 @@ int main() {
     // =================== EXPERIMENTATION =======================
 
     // Initialize stuff
-    CAM->pos = Vec3D(0, 90, -120);
+    CAM->pos = Vec3D(0, 30, -120);
     CAM->ang = Vec3D(0, 0, 0);
 
     RENDER->DEFAULT_COLOR = Color3D(0, 0, 0);
@@ -40,7 +40,7 @@ int main() {
     for (int i = 0; i < MODEL_1.size(); i++) {
         MODEL_1[i].scale(Vec3D(), Vec3D(10, 10, 10));
         MODEL_1[i].color = Color3D(255, 255, 255);
-        MODEL_1[i].isTwoSided = true;
+        // MODEL_1[i].isTwoSided = true;
         TRI_VEC.push_back(MODEL_1[i]);
     }
 

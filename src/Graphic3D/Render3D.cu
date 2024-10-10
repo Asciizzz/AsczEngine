@@ -38,7 +38,7 @@ void Render3D::setBuffer(int w, int h, int p_s) {
     CUDA_CHECK(cudaMalloc(&D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D)));
 }
 
-void Render3D::resize(int w_w, int w_h, int p_s) {
+void Render3D::resizeWindow(int w_w, int w_h, int p_s) {
     // Update window settings
     W_WIDTH = w_w;
     W_HEIGHT = w_h;
@@ -111,8 +111,8 @@ void Render3D::renderGPU(Tri3D *tri3Ds, size_t size) {
     );
     CUDA_CHECK(cudaDeviceSynchronize());
 
-    // Execute tri3DsTo2Ds kernel
-    tri3DsTo2DsKernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
+    // Execute 2D convert kernel
+    transform2Dkernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
         D_TRI2DS, D_TRI3DS, *CAMERA, PIXEL_SIZE, size
     );
     CUDA_CHECK(cudaDeviceSynchronize());
@@ -178,7 +178,7 @@ __global__ void visisbleTrianglesKernel(
     tri3Ds[i].visible = Vec3D::dot(camNormal, camDir) < 0;
 }
 
-__global__ void tri3DsTo2DsKernel(
+__global__ void transform2Dkernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds,
     Camera3D cam, int p_s, size_t size
 ) {
