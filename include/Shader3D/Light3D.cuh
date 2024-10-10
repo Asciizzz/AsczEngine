@@ -48,26 +48,41 @@ public:
     Vec3D pos = Vec3D(0, 0, -100);
     Vec3D normal = Vec3D(0, 0, 1);
 
-    Tri2D *D_TRI2DS = new Tri2D[0]; // Device triangles 2D for light;
+    Tri2D *D_TRI2DS; // Light's own device triangles 2D
+    size_t TRI_SIZE;
+    void mallocTris(size_t size);
+    void freeTris();
+    void resizeTris(size_t size);
 
     float *SHADOW_MAP;
-    void initShadowMap(int w, int h);
+    int SHADOW_MAP_WIDTH;
+    int SHADOW_MAP_HEIGHT;
+    int SHADOW_MAP_SIZE;
+    void initShadowMap(int w, int h, int p_s);
     __host__ __device__ Vec2D toLightOrthographic(Light3D light, Vec3D v);
 
     // Demo
     void demo(Render3D *render);
+
+    void sharedTri2Ds(Render3D *render);
 };
 
 // Kernel that convert tri3Ds to tri2Ds
 // Literally the same as the one in Render3D
 // But this time from the light's orthographic view
 __global__ void lightOrthographicKernel(
-    Tri2D *tri2Ds, const Tri3D *tri3Ds, size_t size
+    Tri2D *tri2Ds, const Tri3D *tri3Ds, int p_s, size_t size
 );
 
 // Kernel for applying lighting
 __global__ void lightingKernel(
     Pixel3D *pixels, Light3D light, int size
+);
+
+// Kernel for light orthographic as well as camera perspective
+__global__ void sharedTri2DsKernel(
+    Tri2D *tri2Dcam, Tri2D *tri2Dlight, const Tri3D *tri3Ds,
+    const Camera3D cam, int p_s, size_t size
 );
 
 #endif

@@ -82,7 +82,7 @@ void Render3D::resizeTris(size_t size) {
 }
 
 // To vec2D
-__host__ __device__ Vec2D Render3D::totoTriangle2Ds(const Camera3D &cam, Vec3D v) {
+__host__ __device__ Vec2D Render3D::toVec2D(const Camera3D &cam, Vec3D v) {
     Vec3D diff = Vec3D::sub(v, cam.pos);
 
     // Apply Yaw (rotation around Y axis)
@@ -124,8 +124,8 @@ void Render3D::visibleTriangles() {
     );
     CUDA_CHECK(cudaDeviceSynchronize());
 }
-void Render3D::toTriangle2Ds() {
-    toTriangle2Dskernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
+void Render3D::cameraPerspective() {
+    cameraPerspectivekernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
         D_TRI2DS, D_TRI3DS, *CAMERA, PIXEL_SIZE, TRI_SIZE
     );
     CUDA_CHECK(cudaDeviceSynchronize());
@@ -139,12 +139,7 @@ void Render3D::rasterize() {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-void Render3D::executePipeline() {
-    resetBuffer();
-    visibleTriangles();
-    toTriangle2Ds();
-    rasterize();
-}
+// ========================= KERNELS =========================
 
 __global__ void resetBufferKernel(
     Pixel3D *buffer, Color3D def_color, size_t size
@@ -183,16 +178,16 @@ __global__ void visisbleTrianglesKernel(
     tri3Ds[i].visible = Vec3D::dot(camNormal, camDir) < 0;
 }
 
-__global__ void toTriangle2Dskernel(
+__global__ void cameraPerspectivekernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds,
     Camera3D cam, int p_s, size_t size
 ) {
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size || !tri3Ds[i].visible) return;
 
-    Vec2D v1 = Render3D::totoTriangle2Ds(cam, tri3Ds[i].v1);
-    Vec2D v2 = Render3D::totoTriangle2Ds(cam, tri3Ds[i].v2);
-    Vec2D v3 = Render3D::totoTriangle2Ds(cam, tri3Ds[i].v3);
+    Vec2D v1 = Render3D::toVec2D(cam, tri3Ds[i].v1);
+    Vec2D v2 = Render3D::toVec2D(cam, tri3Ds[i].v2);
+    Vec2D v3 = Render3D::toVec2D(cam, tri3Ds[i].v3);
 
     v1.x /= p_s; v1.y /= p_s;
     v2.x /= p_s; v2.y /= p_s;
@@ -253,7 +248,6 @@ __global__ void rasterizeKernel(
         );
 
         // Check if the pixel is inside the triangle
-        // (allow small margin of error)
         if (barycentric.x < 0.0 ||
             barycentric.y < 0.0 ||
             barycentric.z < 0.0) continue;
@@ -278,36 +272,6 @@ __global__ void rasterizeKernel(
         );
         Vec3D world(px, py, pz);
 
-        // =================== LIGHTING =======================
-        // !!! DECRAPIATED !!!
-
-        // (you can modify the lighting logic based on the type of light)
-        // (there are: spot light, point light, directional light, etc.)
-
-        // BETA: Light color manipulation
-        // Color3D color = tri3Ds[i].color;
-
-        // Vec3D lightDir = Vec3D::sub(light.pos, world);
-        // double cosA = Vec3D::dot(tri3Ds[i].normal, lightDir) /
-        //     (Vec3D::mag(tri3Ds[i].normal) * Vec3D::mag(lightDir));
-        // // Note: we cannot use std::max and std::min in device code
-        // // if (cosA < 0) cosA = 0;
-
-        // if (cosA < 0) cosA = tri3Ds[i].isTwoSided ? -cosA : 0;
-
-        // double ratio = light.ambient + cosA * (light.specular - light.ambient);
-
-        // color.runtimeRGB.mult(ratio);
-
-        // // Apply colored light
-        // color.runtimeRGB.v1 = color.runtimeRGB.v1 * light.rgbRatio.x;
-        // color.runtimeRGB.v2 = color.runtimeRGB.v2 * light.rgbRatio.y;
-        // color.runtimeRGB.v3 = color.runtimeRGB.v3 * light.rgbRatio.z;
-
-        // // Restrict color values
-        // color.runtimeRGB.restrictRGB();
-
-        // Set buffer values
         pixels[index] = {
             tri3Ds[i].color, tri3Ds[i].normal, world, screen
         };

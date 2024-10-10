@@ -115,6 +115,7 @@ int main() {
     size_t tri_count = TRI_VEC.size();
     Tri3D *tri_test = new Tri3D[tri_count];
     RENDER->mallocTris(tri_count);
+    LIGHT->mallocTris(tri_count);
 
     double maxX = -INFINITY;
     double maxY = -INFINITY;
@@ -152,7 +153,7 @@ int main() {
         tri_test[i] = TRI_VEC[i];
     }
 
-    LIGHT->initShadowMap(maxX - minX, maxY - minY);
+    LIGHT->initShadowMap(maxX - minX, maxY - minY, RENDER->PIXEL_SIZE);
 
     // Tri3D *GRAPH = tri_test;
 
@@ -280,7 +281,10 @@ int main() {
 
         // ======= Main graphic rendering pipeline =======
         RENDER->memcpyTris(tri_test);
-        RENDER->executePipeline();
+        RENDER->resetBuffer();
+        RENDER->visibleTriangles();
+        LIGHT->sharedTri2Ds(RENDER);
+        RENDER->rasterize();
 
         LIGHT->demo(RENDER);
 

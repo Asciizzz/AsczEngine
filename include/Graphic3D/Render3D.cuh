@@ -53,13 +53,12 @@ public:
     void freeTris();
     void resizeTris(size_t size); // Should only be called if really necessary
 
-    __host__ __device__ static Vec2D totoTriangle2Ds(const Camera3D &cam, Vec3D v);
+    __host__ __device__ static Vec2D toVec2D(const Camera3D &cam, Vec3D v);
     
     // The pipeline
-    void executePipeline();
     void resetBuffer();
     void visibleTriangles();
-    void toTriangle2Ds();
+    void cameraPerspective();
     void rasterize();
 };
 
@@ -74,7 +73,7 @@ __global__ void visisbleTrianglesKernel(
 );
 
 // Kernel for converting 3D triangles to 2D triangles
-__global__ void toTriangle2Dskernel(
+__global__ void cameraPerspectivekernel(
     Tri2D *tri2Ds, const Tri3D *tri3Ds,
     Camera3D cam, int p_s, size_t size
 );
