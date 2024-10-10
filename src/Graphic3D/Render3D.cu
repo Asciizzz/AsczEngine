@@ -152,6 +152,17 @@ __device__ bool atomicMinFloat(float* addr, float value) {
 
     return __int_as_float(old) > value;
 }
+__device__ bool atomicMaxFloat(float* addr, float value) {
+    int* addr_as_int = (int*)addr;
+    int old = *addr_as_int, assumed;
+
+    do {
+        assumed = old;
+        old = atomicCAS(addr_as_int, assumed, __float_as_int(fmaxf(value, __int_as_float(assumed))));
+    } while (assumed != old);
+
+    return __int_as_float(old) < value;
+}
 
 __global__ void resetBufferKernel(
     Pixel3D *buffer, Color3D def_color, size_t size

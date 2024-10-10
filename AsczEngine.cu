@@ -51,7 +51,11 @@ int main() {
             Vec3D(),
             Vec3D(model_scale, model_scale, model_scale)
         );
-        MODEL_1[i].color = Color3D(120, 255, 255);
+        MODEL_1[i].color = Color3D(
+            rand() % 50 + 200,
+            rand() % 200 + 50,
+            rand() % 200 + 50
+        );
         MODEL_1[i].shadow = false;
         TRI_VEC.push_back(MODEL_1[i]);
     }
@@ -70,11 +74,10 @@ int main() {
 
     for (size_t x = 0; x < GRAPH_POINTS.size() - 1; x++) {
         for (size_t z = 0; z < GRAPH_POINTS[x].size() - 1; z++) {
-            double cx = 50 + 150 * double(x) / GRAPH_POINTS.size();
-            double cz = 50 + 150 * double(z) / GRAPH_POINTS[x].size();
+            double cx = 50 + 200 * double(x) / GRAPH_POINTS.size();
+            double cz = 50 + 200 * double(z) / GRAPH_POINTS[x].size();
             double csqrt = 255 * sqrt((cx*cx + cz*cz) / 65025);
-            Color3D color = Color3D(232, 211, 139 + 20 * double(x) / GRAPH_POINTS.size());
-            color = Color3D(255, 255, 255);
+            Color3D color = Color3D(cx, csqrt, cz);
 
             Tri3D tri1 = Tri3D(
                 GRAPH_POINTS[x][z], GRAPH_POINTS[x + 1][z], GRAPH_POINTS[x][z + 1],
@@ -103,16 +106,16 @@ int main() {
         TRI_VEC.push_back(tri);
         // +x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
-        // TRI_VEC.push_back(tri);
+        TRI_VEC.push_back(tri);
         // -z Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
         // TRI_VEC.push_back(tri);
         // -x Wall
         tri.rotate(Vec3D(), Vec3D(0, -M_PI_2, 0));
-        // TRI_VEC.push_back(tri);
+        TRI_VEC.push_back(tri);
         // Ceiling (+y)
         tri.rotate(Vec3D(), Vec3D(0, 0, -M_PI_2));
-        // TRI_VEC.push_back(tri);
+        TRI_VEC.push_back(tri);
     }
 
     size_t graph_size = TRI_VEC.size();

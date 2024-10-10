@@ -70,7 +70,7 @@ void Light3D::applyShadow() {
 
 // ========================= KERNELS =========================
 
-// Kernel for resetting the shadow map to 1000
+// Kernel for resetting the shadow map
 __global__ void resetShadowMapKernel(
     float *shadowMap, int size
 ) {

@@ -1,13 +1,7 @@
 #ifndef LIGHT3D_CUH
 #define LIGHT3D_CUH
 
-// !!! BETA !!!
-
-/* Note: Light3D will share with Render3D the:
-
-- Device buffer
-- Device triangles 3D
-- Device triangles 2D
+/*  !!! BETA !!!
 
 // General rendering + shading pipeline:
 
@@ -38,6 +32,9 @@ For surfaces like wall, floor, terrain...
 For objects that serves physical/interractive purpose (human, car, etc...)
 - shadow=false, lighting=true
 
+// The entire Light system is being held together by hopes and dreams
+and some duct tapes along the side. While it is undoubtedly a mess,
+it is a step forward to a more complex rendering system. Be proud future me.
 */
 
 #include <Render3D.cuh>

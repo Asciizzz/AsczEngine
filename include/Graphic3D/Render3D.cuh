@@ -67,6 +67,7 @@ public:
 // ================= KERNELS AND DEVICE FUNCTIONS =================
 
 __device__ bool atomicMinFloat(float* addr, float value);
+__device__ bool atomicMaxFloat(float* addr, float value);
 
 // Kernel for resetting the buffer
 __global__ void resetBufferKernel(
