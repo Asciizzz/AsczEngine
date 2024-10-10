@@ -32,6 +32,12 @@ We will create directional light that face z-positive
 We will create the map based on the maxXY and minXY of the 2D triangles
 Control the quality with the pixel size
 
+// Common Rule:
+For surfaces like wall, floor, terrain...
+- shadow=true, lighting=whatever(doesn't matter)
+For objects that serves physical/interractive purpose (human, car, etc...)
+- shadow=false, lighting=true
+
 */
 
 #include <Render3D.cuh>

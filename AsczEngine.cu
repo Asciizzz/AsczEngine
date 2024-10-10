@@ -42,11 +42,15 @@ int main() {
 
     // Importing models
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/Sukuna.obj"
+        "assets/Models/AK47.obj"
     );
     size_t model_size = MODEL_1.size();
+    double model_scale = 24;
     for (int i = 0; i < MODEL_1.size(); i++) {
-        MODEL_1[i].scale(Vec3D(), Vec3D(20, 20, 20));
+        MODEL_1[i].scale(
+            Vec3D(),
+            Vec3D(model_scale, model_scale, model_scale)
+        );
         MODEL_1[i].color = Color3D(120, 255, 255);
         MODEL_1[i].shadow = false;
         TRI_VEC.push_back(MODEL_1[i]);
@@ -93,7 +97,7 @@ int main() {
         // Scaling
         tri.scale(Vec3D(), Vec3D(20, 20, 20));
         // Floor (-y)
-        // TRI_VEC.push_back(tri);
+        TRI_VEC.push_back(tri);
         // +z wall
         tri.rotate(Vec3D(), Vec3D(-M_PI_2, 0, 0));
         TRI_VEC.push_back(tri);
@@ -286,7 +290,7 @@ int main() {
         // Rotate the model
         for (int i = 0; i < model_size; i++) {
             model_tri[i].rotate(Vec3D(
-                (maxX - minX) / 2, (maxY - minY) / 2, (maxZ - minZ) / 2
+                -minX, -minY, -minZ
             ), Vec3D(0, 0.01, 0));
         }
 
