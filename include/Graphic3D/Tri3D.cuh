@@ -23,20 +23,22 @@ whether the triang is a flat or an object
 #include <Plane3D.cuh>
 
 struct Tri2D {
-
     Vec2D v1, v2, v3;
     __host__ __device__ Tri2D() {};
 };
 
 class Tri3D {
 public:
-    bool visible = true;
     Vec3D v1, v2, v3;
     Color3D color;
     Vec3D normal;
+
+    // Properties
+    bool visible = true;
     bool isTwoSided;
     bool shadow = true;
     bool lighting = true;
+    long long int meshID = -1;
 
     // Default constructor
     __host__ __device__ Tri3D() {};

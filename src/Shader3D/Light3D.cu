@@ -6,7 +6,6 @@ Light3D::Light3D(Render3D *render) {
 
 Light3D::~Light3D() {
     freeTris();
-    // CUDA_CHECK(cudaFree(SHADOW_MAP));
 }
 
 void Light3D::mallocTris(size_t size) {
@@ -25,9 +24,9 @@ void Light3D::initShadowMap(int w, int h, int p_s) {
     SHADOW_MAP_WIDTH = w / p_s;
     SHADOW_MAP_HEIGHT = h / p_s;
     SHADOW_MAP_SIZE = SHADOW_MAP_WIDTH * SHADOW_MAP_HEIGHT;
-    SHADOW_MAP = new float[SHADOW_MAP_SIZE];
+    SHADOW_MAP = new Shadow[SHADOW_MAP_SIZE];
     CUDA_CHECK(cudaMalloc(
-        &SHADOW_MAP, SHADOW_MAP_SIZE * sizeof(float))
+        &SHADOW_MAP, SHADOW_MAP_SIZE * sizeof(Shadow))
     );
 
     SHADOW_MAP_BLOCK_COUNT = (SHADOW_MAP_SIZE + SHADOW_MAP_BLOCK_SIZE - 1) / SHADOW_MAP_BLOCK_SIZE;
@@ -54,10 +53,11 @@ void Light3D::lighting() {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 void Light3D::shadowMap() {
-    shadowMapKernel<<<RENDER->BLOCK_TRI_COUNT, RENDER->BLOCK_SIZE>>>(
-        SHADOW_MAP, D_TRI2DS,
-        SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, TRI_SIZE
-    );
+    for (size_t i = 0; i < 2; i++)
+        shadowMapKernel<<<RENDER->BLOCK_TRI_COUNT, RENDER->BLOCK_SIZE>>>(
+            SHADOW_MAP, D_TRI2DS, RENDER->D_TRI3DS,
+            SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, RENDER->TRI_SIZE
+        );
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 void Light3D::applyShadow() {
@@ -72,12 +72,13 @@ void Light3D::applyShadow() {
 
 // Kernel for resetting the shadow map
 __global__ void resetShadowMapKernel(
-    float *shadowMap, int size
+    Shadow *shadowMap, int size
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size) return;
 
-    shadowMap[i] = 1000;
+    shadowMap[i].depth = 1000;
+    shadowMap[i].meshID = -1;
 }
 
 // Kernel for applying lighting
@@ -170,19 +171,21 @@ __global__ void sharedTri2DsKernel(
 
 // Kernel for depth map (really easy)
 __global__ void shadowMapKernel(
-    float *shadowMap, Tri2D *tri2Ds, int s_w, int s_h, size_t size
+    Shadow *shadowMap, Tri2D *tri2Ds, const Tri3D *tri3Ds,
+    int s_w, int s_h, size_t size
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size) return;
 
     // Get the triangle
-    Tri2D tri = tri2Ds[i];
+    Tri2D tri2D = tri2Ds[i];
+    Tri3D tri3D = tri3Ds[i];
 
     // Get the bounding box
-    int minX = min(tri.v1.x, min(tri.v2.x, tri.v3.x));
-    int maxX = max(tri.v1.x, max(tri.v2.x, tri.v3.x));
-    int minY = min(tri.v1.y, min(tri.v2.y, tri.v3.y));
-    int maxY = max(tri.v1.y, max(tri.v2.y, tri.v3.y));
+    int minX = min(tri2D.v1.x, min(tri2D.v2.x, tri2D.v3.x));
+    int maxX = max(tri2D.v1.x, max(tri2D.v2.x, tri2D.v3.x));
+    int minY = min(tri2D.v1.y, min(tri2D.v2.y, tri2D.v3.y));
+    int maxY = max(tri2D.v1.y, max(tri2D.v2.y, tri2D.v3.y));
 
     // Clip the bounding box (slightly expanded)
     minX = max(minX, 0);
@@ -195,28 +198,42 @@ __global__ void shadowMapKernel(
         for (int y = minY; y <= maxY; y++) {
             // Get the barycentric coordinates
             Vec3D bary = Vec2D::barycentricLambda(
-                Vec2D(x, y), tri.v1, tri.v2, tri.v3
+                Vec2D(x, y), tri2D.v1, tri2D.v2, tri2D.v3
             );
 
             // Check if the point is inside the triangle
             if (bary.x < 0 || bary.y < 0 || bary.z < 0) continue;
 
             // Get the depth
-            float depth = bary.x * tri.v1.zDepth + bary.y * tri.v2.zDepth + bary.z * tri.v3.zDepth;
+            float depth = Vec2D::barycentricCalc(
+                bary, tri3D.v1.z, tri3D.v2.z, tri3D.v3.z
+            );
 
             // Update the shadow map
             int index = x + y * s_w;
 
-            if (atomicMinFloat(&shadowMap[index], depth)) {
-                shadowMap[index] = depth;
+            bool shadowCloser = atomicMinFloat(&shadowMap[index].depth, depth);
+
+            if (tri3D.meshID != -1 &&
+                tri3D.meshID == shadowMap[index].meshID) {
+                
+                if (!shadowCloser) {
+                    shadowMap[index].depth = depth;
+                    shadowMap[index].meshID = tri3D.meshID;
+                }
+
+            } else if (shadowCloser) {
+                shadowMap[index].depth = depth;
+                shadowMap[index].meshID = tri3D.meshID;
             }
+
         }
     }
 }
 
 // Kernel for applying the shadow map from the buffer
 __global__ void applyShadowKernel(
-    Pixel3D *buffer, float *shadowMap, int s_w, int s_h, int p_s, size_t size
+    Pixel3D *buffer, Shadow *shadowMap, int s_w, int s_h, int p_s, size_t size
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size) return;
@@ -237,7 +254,7 @@ __global__ void applyShadowKernel(
     int index = x + y * s_w;
 
     // Get the shadow map depth
-    float shadowDepth = shadowMap[index];
+    float shadowDepth = shadowMap[index].depth;
 
     // Check if the pixel is in shadow
     if (depth > shadowDepth) {

@@ -10,6 +10,7 @@ struct Pixel3D {
     Vec2D screen;
     bool shadow = true;
     bool lighting = true;
+    long long int meshID = -1;
 };
 
 class Render3D {

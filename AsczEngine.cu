@@ -42,7 +42,7 @@ int main() {
 
     // Importing models
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/AK47.obj"
+        "assets/Models/Sukuna.obj"
     );
     size_t model_size = MODEL_1.size();
     double model_scale = 24;
@@ -51,12 +51,15 @@ int main() {
             Vec3D(),
             Vec3D(model_scale, model_scale, model_scale)
         );
-        MODEL_1[i].color = Color3D(
-            rand() % 50 + 200,
-            rand() % 200 + 50,
-            rand() % 200 + 50
-        );
+        MODEL_1[i].color = Color3D(255, 255, 255);
+        // Color3D(
+        //     rand() % 50 + 200,
+        //     rand() % 200 + 50,
+        //     rand() % 200 + 50
+        // );
         MODEL_1[i].shadow = false;
+        MODEL_1[i].lighting = true;
+        MODEL_1[i].meshID = 0;
         TRI_VEC.push_back(MODEL_1[i]);
     }
 

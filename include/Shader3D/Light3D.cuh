@@ -39,6 +39,11 @@ it is a step forward to a more complex rendering system. Be proud future me.
 
 #include <Render3D.cuh>
 
+struct Shadow {
+    float depth;
+    size_t meshID;
+};
+
 class Light3D {
 public:
     Light3D(Render3D *render);
@@ -58,7 +63,7 @@ public:
     void freeTris();
     void resizeTris(size_t size);
 
-    float *SHADOW_MAP;
+    Shadow *SHADOW_MAP;
     int SHADOW_MAP_WIDTH;
     int SHADOW_MAP_HEIGHT;
     int SHADOW_MAP_SIZE;
@@ -76,7 +81,7 @@ public:
 // ========================= KERNELS =========================
 
 __global__ void resetShadowMapKernel(
-    float *shadowMap, int size
+    Shadow *shadowMap, int size
 );
 
 // Kernel that convert tri3Ds to tri2Ds
@@ -99,12 +104,13 @@ __global__ void sharedTri2DsKernel(
 
 // Kernel for putting the pixel on the shadow map
 __global__ void shadowMapKernel(
-    float *shadowMap, Tri2D *tri2Ds, int s_w, int s_h, size_t size
+    Shadow *shadowMap, Tri2D *tri2Ds, const Tri3D *tri3Ds,
+    int s_w, int s_h, size_t size
 );
 
 // Kernel for applying shadow
 __global__ void applyShadowKernel(
-    Pixel3D *buffer, float *shadowMap, int s_w, int s_h, int p_s, size_t size
+    Pixel3D *buffer, Shadow *shadowMap, int s_w, int s_h, int p_s, size_t size
 );
 
 #endif
