@@ -294,9 +294,10 @@ int main() {
 
         // Rotate the model
         RENDER->rotateTris(
-            Vec3D(minX, minY, minZ),
+            Vec3D(-minX, -minY, -minZ),
             Vec3D(0, 0.01, 0),
-            0, model_size);
+            0, model_size
+        );
 
         // ======= Main graphic rendering pipeline =======
         RENDER->resetBuffer();
