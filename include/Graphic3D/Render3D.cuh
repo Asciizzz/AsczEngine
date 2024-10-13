@@ -43,10 +43,8 @@ public:
     int BUFFER_WIDTH;
     int BUFFER_HEIGHT;
     int BUFFER_SIZE;
-    Pixel3D *BUFFER = new Pixel3D[0];
     Pixel3D *D_BUFFER; // Device buffer for kernel
     void setBuffer(int w, int h, int p_s);
-    void memcpyBuffer();
 
     Tri3D *D_TRI3DS;
     Tri2D *D_TRI2DS;
@@ -58,6 +56,11 @@ public:
 
     __host__ __device__ static Vec2D toVec2D(const Camera3D &cam, Vec3D v);
     
+    // Transformations
+    void translateTris(Vec3D t, size_t start, size_t end=0);
+    void rotateTris(Vec3D origin, Vec3D w, size_t start, size_t end=0);
+    void scaleTris(Vec3D origin, Vec3D s, size_t start, size_t end=0);
+
     // The pipeline
     void resetBuffer();
     void visibleTriangles();
@@ -67,6 +70,18 @@ public:
 
 // ================= KERNELS AND DEVICE FUNCTIONS =================
 
+// Kernel for triangles' transformations
+__global__ void translateTri3DKernel(
+    Tri3D *tri3Ds, Vec3D t, size_t start, size_t end
+);
+__global__ void rotateTri3DKernel(
+    Tri3D *tri3Ds, Vec3D origin, Vec3D w, size_t start, size_t end
+);
+__global__ void scaleTri3DKernel(
+    Tri3D *tri3Ds, Vec3D center, Vec3D s, size_t start, size_t end
+);
+
+// Atomic functions for float
 __device__ bool atomicMinFloat(float* addr, float value);
 __device__ bool atomicMaxFloat(float* addr, float value);
 

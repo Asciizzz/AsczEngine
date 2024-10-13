@@ -13,18 +13,17 @@ to fill the pixels, and the CPU to draw the texture.
 
 class SFMLTexture {
 public:
-    sf::Texture texture;
-    sf::Uint8 *pixels;
-
-    sf::Sprite sprite;
+    sf::Texture TEXTURE;
+    sf::Sprite SPRITE;
 
     // Allocate memory for the Pixel buffer
-    Pixel3D *d_buffer;
-    sf::Uint8 *d_sfPixels;
+    
+    sf::Uint8 *SFPIXELS;
+    sf::Uint8 *D_SFPIXELS;
 
     // Set kernel parameters
-    const size_t blockSize = 256;
-    size_t numBlocks;
+    const size_t BLOCK_SIZE = 256;
+    size_t BLOCK_COUNT;
 
     SFMLTexture(Render3D *render);
     ~SFMLTexture();

@@ -19,7 +19,6 @@ Render3D::Render3D(Camera3D *camera, int w_w, int w_h, int p_s) {
     setBuffer(w_w, w_h, p_s);
 }
 Render3D::~Render3D() {
-    delete[] BUFFER;
     CUDA_CHECK(cudaFree(D_BUFFER));
 
     freeTris();
@@ -30,16 +29,9 @@ void Render3D::setBuffer(int w, int h, int p_s) {
     BUFFER_WIDTH = w / p_s;
     BUFFER_HEIGHT = h / p_s;
     BUFFER_SIZE = BUFFER_WIDTH * BUFFER_HEIGHT;
-
-    delete[] BUFFER;
-    BUFFER = new Pixel3D[BUFFER_SIZE];
     BLOCK_BUFFER_COUNT = (BUFFER_SIZE + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     CUDA_CHECK(cudaMalloc(&D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D)));
-}
-
-void Render3D::memcpyBuffer() {
-    CUDA_CHECK(cudaMemcpy(BUFFER, D_BUFFER, BUFFER_SIZE * sizeof(Pixel3D), cudaMemcpyDeviceToHost));
 }
 
 void Render3D::resizeWindow(int w_w, int w_h, int p_s) {
@@ -111,6 +103,29 @@ __host__ __device__ Vec2D Render3D::toVec2D(const Camera3D &cam, Vec3D v) {
     return Vec2D(projX, projY, finalZ);
 }
 
+// Transformations
+void Render3D::translateTris(Vec3D t, size_t start, size_t end) {
+    if (end == 0) end = start + 1;
+
+    translateTri3DKernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
+        D_TRI3DS, t, start, end
+    );
+}
+void Render3D::rotateTris(Vec3D origin, Vec3D w, size_t start, size_t end) {
+    if (end == 0) end = start + 1;
+
+    rotateTri3DKernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
+        D_TRI3DS, origin, w, start, end
+    );
+}
+void Render3D::scaleTris(Vec3D origin, Vec3D s, size_t start, size_t end) {
+    if (end == 0) end = start + 1;
+
+    scaleTri3DKernel<<<BLOCK_TRI_COUNT, BLOCK_SIZE>>>(
+        D_TRI3DS, origin, s, start, end
+    );
+}
+
 // The pipelines
 void Render3D::resetBuffer() {
     resetBufferKernel<<<BLOCK_BUFFER_COUNT, BLOCK_SIZE>>>(
@@ -140,6 +155,32 @@ void Render3D::rasterize() {
 }
 
 // ================= KERNELS AND DEVICE FUNCTIONS =================
+
+// Kernel for triangles' transformations
+__global__ void translateTri3DKernel(
+    Tri3D *tri3Ds, Vec3D t, size_t start, size_t end
+) {
+    size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < start || i >= end) return;
+
+    tri3Ds[i].translate(t);
+}
+__global__ void rotateTri3DKernel(
+    Tri3D *tri3Ds, Vec3D origin, Vec3D w, size_t start, size_t end
+) {
+    size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < start || i >= end) return;
+
+    tri3Ds[i].rotate(origin, w);
+}
+__global__ void scaleTri3DKernel(
+    Tri3D *tri3Ds, Vec3D origin, Vec3D s, size_t start, size_t end
+) {
+    size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < start || i >= end) return;
+
+    tri3Ds[i].scale(origin, s);
+}
 
 __device__ bool atomicMinFloat(float* addr, float value) {
     int* addr_as_int = (int*)addr;

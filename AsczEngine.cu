@@ -178,8 +178,7 @@ int main() {
         tri_test[i] = TRI_VEC[i];
     }
 
-    Tri3D *model_tri = tri_test;
-
+    RENDER->memcpyTris(tri_test);
     LIGHT->initShadowMap(maxX - minX, maxY - minY, 1);
 
     // Unrelated stuff
@@ -294,14 +293,12 @@ int main() {
         // ================= Playground ====================
 
         // Rotate the model
-        for (int i = 0; i < model_size; i++) {
-            model_tri[i].rotate(Vec3D(
-                -minX, -minY, -minZ
-            ), Vec3D(0, 0.01, 0));
-        }
+        RENDER->rotateTris(
+            Vec3D(minX, minY, minZ),
+            Vec3D(0, 0.01, 0),
+            0, model_size);
 
         // ======= Main graphic rendering pipeline =======
-        RENDER->memcpyTris(tri_test);
         RENDER->resetBuffer();
         LIGHT->resetShadowMap();
         RENDER->visibleTriangles();
@@ -311,11 +308,11 @@ int main() {
         LIGHT->shadowMap();
         LIGHT->applyShadow();
 
-        RENDER->memcpyBuffer();
-
         TEXTURE->updateTexture(RENDER);
-        WINDOW.draw(TEXTURE->sprite);
+        WINDOW.draw(TEXTURE->SPRITE);
+
         CSLOG->drawLog(WINDOW);
+
         WINDOW.display();
 
         FPS->endFrame();
