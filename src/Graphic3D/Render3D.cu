@@ -249,6 +249,8 @@ __global__ void cameraPerspectivekernel(
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size || !tri3Ds[i].visible) return;
 
+    tri2Ds[i].meshID = tri3Ds[i].meshID;
+
     Vec2D v1 = Render3D::toVec2D(cam, tri3Ds[i].v1);
     Vec2D v2 = Render3D::toVec2D(cam, tri3Ds[i].v2);
     Vec2D v3 = Render3D::toVec2D(cam, tri3Ds[i].v3);

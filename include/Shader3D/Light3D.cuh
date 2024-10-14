@@ -41,7 +41,7 @@ it is a step forward to a more complex rendering system. Be proud future me.
 
 struct Shadow {
     float depth;
-    size_t meshID;
+    long long int meshID;
 };
 
 class Light3D {
@@ -104,7 +104,7 @@ __global__ void sharedTri2DsKernel(
 
 // Kernel for putting the pixel on the shadow map
 __global__ void shadowMapKernel(
-    Shadow *shadowMap, Tri2D *tri2Ds, const Tri3D *tri3Ds,
+    Shadow *shadowMap, Tri2D *tri2Ds,
     int s_w, int s_h, size_t size
 );
 

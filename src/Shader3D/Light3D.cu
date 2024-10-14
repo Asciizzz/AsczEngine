@@ -55,7 +55,7 @@ void Light3D::lighting() {
 void Light3D::shadowMap() {
     for (size_t i = 0; i < 2; i++)
         shadowMapKernel<<<RENDER->BLOCK_TRI_COUNT, RENDER->BLOCK_SIZE>>>(
-            SHADOW_MAP, D_TRI2DS, RENDER->D_TRI3DS,
+            SHADOW_MAP, D_TRI2DS,
             SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, RENDER->TRI_SIZE
         );
     CUDA_CHECK(cudaDeviceSynchronize());
@@ -143,6 +143,9 @@ __global__ void sharedTri2DsKernel(
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= size) return;
 
+    tri2Dcam[i].meshID = tri3Ds[i].meshID;
+    tri2Dlight[i].meshID = tri3Ds[i].meshID;
+
     // We can recycle the camera perspective kernel
     tri2Dcam[i].v1 = Render3D::toVec2D(cam, tri3Ds[i].v1);
     tri2Dcam[i].v2 = Render3D::toVec2D(cam, tri3Ds[i].v2);
@@ -171,7 +174,7 @@ __global__ void sharedTri2DsKernel(
 
 // Kernel for depth map (really easy)
 __global__ void shadowMapKernel(
-    Shadow *shadowMap, Tri2D *tri2Ds, const Tri3D *tri3Ds,
+    Shadow *shadowMap, Tri2D *tri2Ds,
     int s_w, int s_h, size_t size
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -179,7 +182,6 @@ __global__ void shadowMapKernel(
 
     // Get the triangle
     Tri2D tri2D = tri2Ds[i];
-    Tri3D tri3D = tri3Ds[i];
 
     // Get the bounding box
     int minX = min(tri2D.v1.x, min(tri2D.v2.x, tri2D.v3.x));
@@ -206,7 +208,7 @@ __global__ void shadowMapKernel(
 
             // Get the depth
             float depth = Vec2D::barycentricCalc(
-                bary, tri3D.v1.z, tri3D.v2.z, tri3D.v3.z
+                bary, tri2D.v1.zDepth, tri2D.v2.zDepth, tri2D.v3.zDepth
             );
 
             // Update the shadow map
@@ -214,17 +216,15 @@ __global__ void shadowMapKernel(
 
             bool shadowCloser = atomicMinFloat(&shadowMap[index].depth, depth);
 
-            if (tri3D.meshID != -1 &&
-                tri3D.meshID == shadowMap[index].meshID) {
+            if (tri2D.meshID != -1 &&
+                tri2D.meshID == shadowMap[index].meshID) {
                 
                 if (!shadowCloser) {
-                    shadowMap[index].depth = depth;
-                    shadowMap[index].meshID = tri3D.meshID;
+                    shadowMap[index] = {depth, tri2D.meshID};
                 }
 
             } else if (shadowCloser) {
-                shadowMap[index].depth = depth;
-                shadowMap[index].meshID = tri3D.meshID;
+                shadowMap[index] = {depth, tri2D.meshID};
             }
 
         }

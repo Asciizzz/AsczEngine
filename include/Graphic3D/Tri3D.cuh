@@ -24,6 +24,7 @@ whether the triang is a flat or an object
 
 struct Tri2D {
     Vec2D v1, v2, v3;
+    long long int meshID = -1;
     __host__ __device__ Tri2D() {};
 };
 

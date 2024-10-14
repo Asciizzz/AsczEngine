@@ -42,10 +42,10 @@ int main() {
 
     // Importing models
     std::vector<Tri3D> MODEL_1 = Tri3D::readObj(
-        "assets/Models/Sukuna.obj"
+        "assets/Models/sukuna.obj"
     );
     size_t model_size = MODEL_1.size();
-    double model_scale = 24;
+    double model_scale = 27;
     for (int i = 0; i < MODEL_1.size(); i++) {
         MODEL_1[i].scale(
             Vec3D(),
@@ -57,7 +57,8 @@ int main() {
         //     rand() % 200 + 50,
         //     rand() % 200 + 50
         // );
-        MODEL_1[i].shadow = false;
+
+        // MODEL_1[i].shadow = false;
         MODEL_1[i].lighting = true;
         MODEL_1[i].meshID = 0;
         TRI_VEC.push_back(MODEL_1[i]);
